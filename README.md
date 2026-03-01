@@ -8,6 +8,19 @@ StarkSplit is a bill-splitting app built on Starknet. Split expenses with friend
 
 ---
 
+## ⚠️ For Judges & Testers: Get Testing Funds First
+
+**Before testing the app**, connect your wallet and go to **Settings** → **Testnet Faucet** → click **"Get testing funds"**.
+
+You'll receive **0.01 WBTC + 5 STRK** to your connected wallet (one request per address per 24 hours). This is required to:
+- **Add expenses** and **settle debts** in split groups (WBTC)
+- **Pay gas** on testnet when gasless isn't available (STRK)
+- **Contribute** to and **stake** in yield pools (STRK)
+
+Without these funds, you won't be able to create expenses, settle, or use pools.
+
+---
+
 ## Features
 
 ### ✅ Splits (Custom Token)
@@ -202,7 +215,7 @@ wallet.execute(
 ### Shared
 
 - `/` — Landing page (how-it-works, trust signals, sign-in CTA)
-- `/settings` — User profile, wallet management, display name
+- `/settings` — User profile, wallet management, display name, **Testnet Faucet** (get 0.01 WBTC + 5 STRK)
 - `/join/[code]` — Join group via invite code (routes to split or pool based on type)
 
 ### Splits
@@ -437,12 +450,12 @@ NEXT_PUBLIC_STAKING_CONTRACT=0x00ca...      # Delegation pool contract
 
 # Custom Token (Splits)
 NEXT_PUBLIC_CUSTOM_TOKEN_ADDRESS=0x...      # Your ERC20 token
-NEXT_PUBLIC_CUSTOM_TOKEN_DECIMALS=18        # Token decimals
+NEXT_PUBLIC_CUSTOM_TOKEN_DECIMALS=8         # Token decimals (WBTC)
 NEXT_PUBLIC_CUSTOM_TOKEN_SYMBOL=WBTC        # Display symbol
 
-# Faucets (for testing)
-NEXT_PUBLIC_STRK_FAUCET_URL=your_strk_faucet_url
-NEXT_PUBLIC_WBTC_FAUCET_URL=your_wbtc_faucet_url
+# Faucet (server-only, for Settings "Get testing funds" — sends 0.01 WBTC + 5 STRK)
+# FAUCET_PRIVATE_KEY=0x...
+# FAUCET_PUBLIC_KEY=0x...
 
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -450,7 +463,13 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 #### Testnet Demo Notes
 
-For testing on **Sepolia testnet**, we've deployed a custom WBTC token. Judges can use the integrated faucet to claim **0.001 WBTC** to test settlement flows. This is for demonstration purposes only. Each settlement on testnet will deduct from the faucet balance.
+For testing on **Sepolia testnet**, we've deployed a custom WBTC token. **Judges and testers must first get testing funds** from **Settings → Testnet Faucet** (click "Get testing funds"). You'll receive **0.01 WBTC + 5 STRK** to your connected wallet—one request per address per 24 hours. This enables:
+
+- Adding expenses and settling debts in split groups (WBTC)
+- Paying gas on testnet when gasless isn't available (STRK)
+- Contributing to and staking in yield pools (STRK)
+
+Without these funds, the app won't be usable for testing.
 
 ### Run Development Server
 
