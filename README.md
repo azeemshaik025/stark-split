@@ -4,7 +4,7 @@
 
 StarkSplit is a bill-splitting app built on Starknet. Split expenses with friends using a custom Bitcoin-on-Starknet token, settle debts gasless on mainnet. Also includes yield pools where groups can pool STRK and earn rewards through delegation pools.
 
-**[Live Demo](https://stark-split.vercel.app)** · **Built with [Starkzap SDK](https://github.com/Starkware-libs/starkzap)**
+**[Live Demo](https://stark-split.vercel.app/)** · **[GitHub](https://github.com/azeemshaik025/stark-split)** · **Built with [Starkzap SDK](https://github.com/Starkware-libs/starkzap)**
 
 ---
 
@@ -427,7 +427,7 @@ Uses greedy matching (minimum cashflow algorithm) to minimize settlement transac
 
 ```bash
 # Clone repository
-git clone https://github.com/[username]/stark-split.git
+git clone https://github.com/azeemshaik025/stark-split.git
 cd stark-split
 
 # Install dependencies
@@ -524,8 +524,8 @@ MIT — Built for the Starkzap Developer Challenge.
 
 ## Contact & Links
 
-- **Live Demo** — [stark-split.vercel.app](https://stark-split.vercel.app)
-- **GitHub** — [github.com/[username]/stark-split](https://github.com)
+- **Live Demo** — [stark-split.vercel.app](https://stark-split.vercel.app/)
+- **GitHub** — [github.com/azeemshaik025/stark-split](https://github.com/azeemshaik025/stark-split)
 - **Twitter** — [@[handle]](https://twitter.com)
 
 Built with ❤️ using **[Starkzap SDK](https://github.com/Starkware-libs/starkzap)** on **Starknet**.
