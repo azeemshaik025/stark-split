@@ -1,0 +1,20 @@
+diff --git a/node_modules/starkzap/dist/src/wallet/cartridge.js b/node_modules/starkzap/dist/src/wallet/cartridge.js
+index db8b309..2f7cdfc 100644
+--- a/node_modules/starkzap/dist/src/wallet/cartridge.js
++++ b/node_modules/starkzap/dist/src/wallet/cartridge.js
+@@ -66,6 +66,15 @@ export class CartridgeWallet extends BaseWallet {
+         if (options.url) {
+             controllerOptions.url = assertSafeHttpUrl(options.url, "Cartridge controller URL").toString();
+         }
++        if (options.signupOptions && options.signupOptions.length > 0) {
++            controllerOptions.signupOptions = options.signupOptions;
++        }
++        if (options.lazyload !== undefined) {
++            controllerOptions.lazyload = options.lazyload;
++        }
++        if (options.propagateSessionErrors !== undefined) {
++            controllerOptions.propagateSessionErrors = options.propagateSessionErrors;
++        }
+         const controller = new Controller(controllerOptions);
+         let waited = 0;
+         let pollIntervalMs = INITIAL_CONTROLLER_POLL_MS;
