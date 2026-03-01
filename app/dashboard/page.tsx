@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Plus, ChevronRight, TrendingUp, Copy } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { truncateAddress, formatAmount, formatBalance, copyToClipboard } from "@/lib/utils";
-import { getGroupCurrency, CUSTOM_TOKEN_SYMBOL } from "@/lib/constants";
+import { getGroupCurrency, CUSTOM_TOKEN_SYMBOL, CUSTOM_TOKEN_DISPLAY_DECIMALS, STRK_DISPLAY_DECIMALS } from "@/lib/constants";
 import Avatar from "@/components/ui/Avatar";
 import { CardSkeleton } from "@/components/ui/Skeleton";
 import Button from "@/components/ui/Button";
@@ -22,7 +22,7 @@ function GroupCard({ group }: { group: Group }) {
   const balance = getUserBalance(group.id);
   const router = useRouter();
   const currency = getGroupCurrency(group.type);
-  const decimals = currency !== "STRK" ? 4 : 2;
+  const decimals = currency !== "STRK" ? CUSTOM_TOKEN_DISPLAY_DECIMALS : STRK_DISPLAY_DECIMALS;
 
   return (
     <div
@@ -125,7 +125,7 @@ export default function DashboardPage() {
   }, 0);
   // Split groups always use CUSTOM_TOKEN_SYMBOL
   const splitCurrency = CUSTOM_TOKEN_SYMBOL;
-  const splitDecimals = 4;
+  const splitDecimals = CUSTOM_TOKEN_DISPLAY_DECIMALS; // Split groups use WBTC
 
   // Not connected — polished connect CTA
   if (!walletAddress) {

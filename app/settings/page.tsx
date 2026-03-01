@@ -73,7 +73,7 @@ export default function SettingsPage() {
       }
       setFaucetTxHash(data.txHash);
       await refreshBalances();
-      toast(`0.001 ${CUSTOM_TOKEN_SYMBOL} sent!`, "success");
+      toast(`0.01 ${CUSTOM_TOKEN_SYMBOL} + 5 STRK sent!`, "success");
     } catch {
       toast("Faucet request failed", "error");
     } finally {
@@ -185,7 +185,7 @@ export default function SettingsPage() {
       <div className="card" style={{ marginBottom: 16 }}>
         <h2 style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 20 }}>Testnet Faucet</h2>
         <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginBottom: 16 }}>
-          Get 0.001 {CUSTOM_TOKEN_SYMBOL} sent to your connected wallet. One request per address per 24 hours.
+          Get 0.01 {CUSTOM_TOKEN_SYMBOL} + 5 STRK sent to your connected wallet. One request per address per 24 hours.
         </p>
         <Button
           size="sm"
@@ -194,7 +194,7 @@ export default function SettingsPage() {
           style={{ marginBottom: faucetTxHash ? 12 : 0 }}
         >
           <Droplets size={16} style={{ marginRight: 6 }} />
-          Get 0.001 {CUSTOM_TOKEN_SYMBOL}
+          Get testing funds
         </Button>
         {faucetTxHash && (
           <a

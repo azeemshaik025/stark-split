@@ -1,5 +1,5 @@
 /**
- * Server-only faucet: sends 0.001 WBTC to recipient using FAUCET_PRIVATE_KEY.
+ * Server-only faucet: sends 0.01 WBTC + 5 STRK to recipient using FAUCET_PRIVATE_KEY.
  * Uses starkzap with StarkSigner (no Cartridge — runs on Node.js).
  * Optional FAUCET_PUBLIC_KEY: when set, uses explicit public key for address derivation
  * (required if private key derivation differs from standard Stark curve).
@@ -12,6 +12,8 @@ import {
   BraavosPreset,
   fromAddress,
   Amount,
+  sepoliaTokens,
+  mainnetTokens,
 } from "starkzap";
 import type { SignerInterface } from "starkzap";
 import {
@@ -23,7 +25,8 @@ import {
 } from "./constants";
 import { normalizeStarknetAddress } from "./utils";
 
-const FAUCET_AMOUNT = "0.001";
+const FAUCET_WBTC_AMOUNT = "0.01";
+const FAUCET_STRK_AMOUNT = "5";
 
 /** Signer that uses explicit public key for address derivation, private key for signing */
 function createFaucetSigner(privateKey: string, publicKey: string): SignerInterface {
@@ -76,16 +79,19 @@ export async function sendFaucetTokens(
     symbol: CUSTOM_TOKEN_SYMBOL,
   };
 
-  const tx = await wallet.transfer(
-    customToken,
-    [
-      {
-        to: fromAddress(normalized),
-        amount: Amount.parse(FAUCET_AMOUNT, customToken),
-      },
-    ],
-    { feeMode: "user_pays" }
-  );
+  const tokens = NETWORK === "sepolia" ? sepoliaTokens : mainnetTokens;
+  const recipient = fromAddress(normalized);
+
+  // Batch both transfers in one tx (0.01 WBTC + 5 STRK)
+  const tx = await wallet
+    .tx()
+    .transfer(customToken, [
+      { to: recipient, amount: Amount.parse(FAUCET_WBTC_AMOUNT, customToken) },
+    ])
+    .transfer(tokens.STRK, [
+      { to: recipient, amount: Amount.parse(FAUCET_STRK_AMOUNT, tokens.STRK) },
+    ])
+    .send({ feeMode: "user_pays" });
   await tx.wait();
   return { txHash: tx.hash };
 }

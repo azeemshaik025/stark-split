@@ -61,8 +61,8 @@ export function calculateDebts(
   const creditors: { id: string; amount: number }[] = [];
   const debtors: { id: string; amount: number }[] = [];
 
-  // Use small threshold (1e-8) so WBTC/8-decimal amounts like 0.00005 are not filtered as "settled"
-  const DUST = 1e-8;
+  // Use 1e-18 so WBTC (8 decimals) and STRK (18 decimals) preserve values like 10e-8
+  const DUST = 1e-18;
   Object.entries(balances).forEach(([id, amount]) => {
     if (amount > DUST) creditors.push({ id, amount });
     else if (amount < -DUST) debtors.push({ id, amount: Math.abs(amount) });
@@ -76,8 +76,8 @@ export function calculateDebts(
   let i = 0;
   let j = 0;
 
-  // Use 8 decimals to preserve WBTC precision (0.00005 must not round to 0.0001)
-  const DECIMALS = 8;
+  // Use 18 decimals to preserve STRK (18) and WBTC (8) precision
+  const DECIMALS = 18;
   while (i < creditors.length && j < debtors.length) {
     const settle = Math.min(creditors[i].amount, debtors[j].amount);
 
@@ -110,7 +110,7 @@ export function getUserNetBalance(
     if (d.to === userId) net += d.amount;
     if (d.from === userId) net -= d.amount;
   });
-  return Number(net.toFixed(8));
+  return Number(net.toFixed(18));
 }
 
 /**

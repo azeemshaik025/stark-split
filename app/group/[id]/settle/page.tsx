@@ -6,6 +6,7 @@ import { ArrowLeft, CheckCircle, XCircle, ExternalLink } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useStore } from "@/store/useStore";
 import { truncateAddress, formatAmount, getSdkErrorMessage, getExplorerTxUrl } from "@/lib/utils";
+import { CUSTOM_TOKEN_DISPLAY_DECIMALS } from "@/lib/constants";
 import { toast, ToastContainer } from "@/components/ui/Toast";
 import Button from "@/components/ui/Button";
 import Avatar from "@/components/ui/Avatar";
@@ -253,7 +254,7 @@ export default function SettlePage() {
                   marginBottom: 8,
                 }}
               >
-                {formatAmount(amount)}
+                {formatAmount(amount, CUSTOM_TOKEN_DISPLAY_DECIMALS)}
               </div>
               <p style={{ color: "var(--text-secondary)", marginBottom: 20 }}>
                 {CUSTOM_TOKEN_SYMBOL}
@@ -291,7 +292,7 @@ export default function SettlePage() {
         {/* Actions */}
         {txStatus === "idle" && isYouPaying && (
           <Button fullWidth size="lg" onClick={handleSettle} className="btn-gradient">
-            Pay {formatAmount(amount)} {CUSTOM_TOKEN_SYMBOL}
+            Pay {formatAmount(amount, CUSTOM_TOKEN_DISPLAY_DECIMALS)} {CUSTOM_TOKEN_SYMBOL}
           </Button>
         )}
 

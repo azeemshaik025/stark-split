@@ -3,7 +3,7 @@
 import { ArrowRight, CheckCircle } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
-import { CUSTOM_TOKEN_SYMBOL } from "@/lib/constants";
+import { CUSTOM_TOKEN_SYMBOL, CUSTOM_TOKEN_DISPLAY_DECIMALS, STRK_DISPLAY_DECIMALS } from "@/lib/constants";
 import { formatAmount, truncateAddress } from "@/lib/utils";
 import type { Debt, User } from "@/types";
 
@@ -93,7 +93,7 @@ export default function DebtSummary({
                   : "var(--text-primary)",
             }}
           >
-            {formatAmount(debt.amount)} {currency}
+            {formatAmount(debt.amount, currency !== "STRK" ? CUSTOM_TOKEN_DISPLAY_DECIMALS : STRK_DISPLAY_DECIMALS)} {currency}
           </span>
 
           {isYouOwe && onSettle && (

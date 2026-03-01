@@ -26,6 +26,10 @@ export const MAX_CUSTOM_TOKEN_AMOUNT = 1;
 /** Max decimal places for custom token input (supports 0.0001) */
 export const CUSTOM_TOKEN_DECIMAL_PLACES = 4;
 
+/** Display decimals: 8 for WBTC, 18 for STRK. Supports values like 10e-8. */
+export const CUSTOM_TOKEN_DISPLAY_DECIMALS = 8;
+export const STRK_DISPLAY_DECIMALS = 18;
+
 /** Currency for a group based on type: split = custom token, pool = STRK */
 export function getGroupCurrency(groupType?: string): string {
   return groupType === "pool" ? "STRK" : CUSTOM_TOKEN_SYMBOL;

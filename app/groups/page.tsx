@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, ChevronRight, Search } from "lucide-react";
 import { useStore } from "@/store/useStore";
-import { getGroupCurrency } from "@/lib/constants";
+import { getGroupCurrency, CUSTOM_TOKEN_DISPLAY_DECIMALS, STRK_DISPLAY_DECIMALS } from "@/lib/constants";
 import { formatAmount } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import { CardSkeleton } from "@/components/ui/Skeleton";
@@ -66,7 +66,7 @@ export default function GroupsPage() {
                 </div>
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
                   <div className="font-mono-nums" style={{ fontWeight: 700, fontSize: "0.9375rem", color: balance > 0 ? "var(--accent-green)" : balance < 0 ? "var(--error)" : "var(--text-tertiary)" }}>
-                    {balance !== 0 ? `${balance > 0 ? "+" : ""}${formatAmount(Math.abs(balance))} ${currency}` : "Settled"}
+                    {balance !== 0 ? `${balance > 0 ? "+" : ""}${formatAmount(Math.abs(balance), currency !== "STRK" ? CUSTOM_TOKEN_DISPLAY_DECIMALS : STRK_DISPLAY_DECIMALS)} ${currency}` : "Settled"}
                   </div>
                   <ChevronRight size={14} color="var(--text-tertiary)" style={{ marginTop: 4 }} />
                 </div>

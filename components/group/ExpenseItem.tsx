@@ -1,6 +1,6 @@
 "use client";
 
-import { guessCategory, CUSTOM_TOKEN_SYMBOL, CUSTOM_TOKEN_DECIMALS } from "@/lib/constants";
+import { guessCategory, CUSTOM_TOKEN_SYMBOL, CUSTOM_TOKEN_DISPLAY_DECIMALS, STRK_DISPLAY_DECIMALS } from "@/lib/constants";
 import { formatDate, truncateAddress, formatAmount } from "@/lib/utils";
 import type { Expense, User } from "@/types";
 
@@ -17,6 +17,7 @@ export default function ExpenseItem({ expense, currentUserId, memberCount = 1, c
     expense.paid_by_user?.display_name ??
     truncateAddress(expense.paid_by_user?.wallet_address ?? "");
   const isYou = expense.paid_by === currentUserId;
+  const displayDecimals = (currency ?? expense.currency ?? CUSTOM_TOKEN_SYMBOL) !== "STRK" ? CUSTOM_TOKEN_DISPLAY_DECIMALS : STRK_DISPLAY_DECIMALS;
 
   // Calculate the amount relevant to the current user
   let displayAmount: number;
@@ -39,6 +40,10 @@ export default function ExpenseItem({ expense, currentUserId, memberCount = 1, c
     displayAmount = isInSplit && splitCount > 0 ? expense.amount / splitCount : 0;
   }
 
+  // Treat dust as zero (avoids floating-point noise). 1e-18 supports STRK 18 decimals and WBTC 10e-8.
+  const DUST = 1e-18;
+  const effectiveAmount = Math.abs(displayAmount) < DUST ? 0 : displayAmount;
+
   return (
     <div className="flex items-center gap-4 py-4 border-b border-[var(--border-subtle)] last:border-0">
       <div
@@ -58,14 +63,14 @@ export default function ExpenseItem({ expense, currentUserId, memberCount = 1, c
           className="font-mono-nums font-bold text-sm"
           style={{
             color:
-              displayAmount === 0
+              effectiveAmount === 0
                 ? "var(--text-tertiary)"
                 : isYou
                   ? "var(--accent-green)"
                   : "var(--error)",
           }}
         >
-          {displayAmount === 0 ? "0.00" : isYou ? `+${formatAmount(displayAmount, CUSTOM_TOKEN_DECIMALS)}` : `-${formatAmount(displayAmount, CUSTOM_TOKEN_DECIMALS)}`}
+          {effectiveAmount === 0 ? "0.00" : isYou ? `+${formatAmount(effectiveAmount, displayDecimals)}` : `-${formatAmount(effectiveAmount, displayDecimals)}`}
         </div>
         <div className="text-xs text-[var(--text-tertiary)]">{currency ?? expense.currency ?? CUSTOM_TOKEN_SYMBOL}</div>
       </div>

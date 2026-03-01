@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Plus, SplitSquareVertical } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { formatDateHeader, truncateAddress, formatAmount } from "@/lib/utils";
-import { getGroupCurrency } from "@/lib/constants";
+import { getGroupCurrency, CUSTOM_TOKEN_DISPLAY_DECIMALS, STRK_DISPLAY_DECIMALS } from "@/lib/constants";
 import { toast, ToastContainer } from "@/components/ui/Toast";
 import { AvatarGroup } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
@@ -208,7 +208,7 @@ export default function GroupPage() {
               <span>
                 You owe{" "}
                 <span className="font-mono-nums font-bold text-[var(--error)]">
-                  {formatAmount(totalYouOwe, currency !== "STRK" ? 4 : 2)} {currency}
+                  {formatAmount(totalYouOwe, currency !== "STRK" ? CUSTOM_TOKEN_DISPLAY_DECIMALS : STRK_DISPLAY_DECIMALS)} {currency}
                 </span>{" "}
                 in total
               </span>
@@ -216,7 +216,7 @@ export default function GroupPage() {
               <span>
                 You&apos;re owed{" "}
                 <span className="font-mono-nums font-bold text-[var(--accent-green)]">
-                  {formatAmount(totalOwedToYou, currency !== "STRK" ? 4 : 2)} {currency}
+                  {formatAmount(totalOwedToYou, currency !== "STRK" ? CUSTOM_TOKEN_DISPLAY_DECIMALS : STRK_DISPLAY_DECIMALS)} {currency}
                 </span>{" "}
                 in total
               </span>

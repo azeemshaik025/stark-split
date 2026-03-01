@@ -7,7 +7,7 @@ export function truncateAddress(address: string, chars = 4): string {
   return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`;
 }
 
-// Format STRK amount with commas
+// Format amount with proper decimals. Supports WBTC (8) and STRK (18), including 10e-8.
 export function formatAmount(
   amount: number | string,
   decimals = 4,
@@ -20,8 +20,10 @@ export function formatAmount(
     return `${(num / 1000).toFixed(1)}K`;
   }
 
+  // For high precision (8+), use 0 min to avoid padding tiny numbers; otherwise 2 for readability
+  const minFrac = decimals >= 8 ? 0 : 2;
   return num.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
+    minimumFractionDigits: minFrac,
     maximumFractionDigits: decimals,
   });
 }
