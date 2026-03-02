@@ -44,23 +44,35 @@ export default function ExpenseItem({ expense, currentUserId, memberCount = 1, c
   const DUST = 1e-18;
   const effectiveAmount = Math.abs(displayAmount) < DUST ? 0 : displayAmount;
 
+  const totalDisplay = formatAmount(expense.amount, displayDecimals);
+  const sym = currency ?? expense.currency ?? CUSTOM_TOKEN_SYMBOL;
+
   return (
-    <div className="flex items-center gap-4 py-4 border-b border-[var(--border-subtle)] last:border-0">
+    <div
+      className="flex items-center gap-3 py-3 border-b last:border-0"
+      style={{ borderColor: "var(--border-subtle)" }}
+    >
       <div
-        className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+        className="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
         style={{ background: "var(--bg-interactive)" }}
       >
         {emoji}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-[var(--text-primary)] truncate">{expense.description}</div>
-        <div className="text-sm text-[var(--text-secondary)]">
-          {isYou ? "You" : paidByName} paid · {formatDate(expense.created_at)}
+        <div className="font-semibold text-[var(--text-primary)] truncate text-[0.875rem] leading-tight">{expense.description}</div>
+        <div className="text-xs text-[var(--text-tertiary)] mt-1">
+          <span style={{ fontWeight: 500, color: "var(--text-secondary)" }}>{isYou ? "You" : paidByName}</span>
+          {" paid "}
+          <span className="font-mono-nums" style={{ fontWeight: 600 }}>
+            {totalDisplay}
+          </span>
+          <span style={{ opacity: 0.5 }}>{" · "}</span>
+          {formatDate(expense.created_at)}
         </div>
       </div>
       <div className="text-right flex-shrink-0">
         <div
-          className="font-mono-nums font-bold text-sm"
+          className="font-mono-nums font-bold text-[0.875rem]"
           style={{
             color:
               effectiveAmount === 0
@@ -70,9 +82,13 @@ export default function ExpenseItem({ expense, currentUserId, memberCount = 1, c
                   : "var(--error)",
           }}
         >
-          {effectiveAmount === 0 ? "0.00" : isYou ? `+${formatAmount(effectiveAmount, displayDecimals)}` : `-${formatAmount(effectiveAmount, displayDecimals)}`}
+          {effectiveAmount === 0
+            ? "—"
+            : isYou
+              ? `+${formatAmount(effectiveAmount, displayDecimals)}`
+              : `-${formatAmount(effectiveAmount, displayDecimals)}`}
         </div>
-        <div className="text-xs text-[var(--text-tertiary)]">{currency ?? expense.currency ?? CUSTOM_TOKEN_SYMBOL}</div>
+        <div className="text-[10px] text-[var(--text-tertiary)] mt-0.5">{sym}</div>
       </div>
     </div>
   );

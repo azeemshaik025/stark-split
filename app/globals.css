@@ -149,24 +149,24 @@ body {
 .card {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 20px 24px;
   box-shadow: var(--shadow-card);
-  transition: transform 0.2s cubic-bezier(0.4,0,0.2,1),
-              box-shadow 0.2s cubic-bezier(0.4,0,0.2,1),
-              border-color 0.2s ease;
+  transition: transform 0.18s cubic-bezier(0.4,0,0.2,1),
+              box-shadow 0.18s cubic-bezier(0.4,0,0.2,1),
+              border-color 0.18s ease;
 }
 
 .card:hover {
   border-color: var(--border-default);
-  box-shadow: var(--shadow-card-hover);
 }
 
 .card-interactive {
   cursor: pointer;
 }
 .card-interactive:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .card-selected {
@@ -174,11 +174,24 @@ body {
   box-shadow: 0 0 0 1px var(--primary), var(--shadow-md);
 }
 
+/* Inset card — recessed panel for nested content */
+.card-inset {
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+}
+
+[data-theme="dark"] .card-inset {
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.2);
+}
+
 /* Gradient-border card (Yield / staking) */
 .card-gradient-border {
   position: relative;
   background: linear-gradient(135deg, rgba(6,182,212,0.04), rgba(99,102,241,0.04));
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 20px 24px;
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-card);
@@ -193,9 +206,9 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(6,182,212,0.4), rgba(99,102,241,0.4));
+  background: linear-gradient(135deg, rgba(6,182,212,0.35), rgba(99,102,241,0.35));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -439,12 +452,12 @@ body {
 .page-content {
   max-width: 1040px;
   margin: 0 auto;
-  padding: 28px 32px 40px;
-  animation: fadeInUp 0.2s ease;
+  padding: 24px 28px 40px;
+  animation: fadeInUp 0.15s ease;
 }
 
 @media (max-width: 768px) {
-  .page-content { padding: 20px 20px 100px; }
+  .page-content { padding: 20px 18px 100px; }
 }
 
 .sidebar-wrapper          { display: flex; }
@@ -739,31 +752,53 @@ body {
    ============================================ */
 .stat-card {
   border-radius: var(--radius-lg);
-  padding: 16px 20px;
+  padding: 18px 20px;
   flex: 1;
   min-width: 0;
-}
-.stat-card-green {
-  background: rgba(0, 230, 118, 0.06);
-  border: 1px solid rgba(0, 230, 118, 0.12);
-}
-.stat-card-red {
-  background: rgba(255, 71, 87, 0.06);
-  border: 1px solid rgba(255, 71, 87, 0.12);
-}
-.stat-card-cyan {
-  background: rgba(0, 210, 255, 0.06);
-  border: 1px solid rgba(0, 210, 255, 0.12);
-}
-.stat-card-purple {
-  background: rgba(99, 102, 241, 0.06);
-  border: 1px solid rgba(99, 102, 241, 0.12);
+  position: relative;
+  overflow: hidden;
 }
 
-[data-theme="dark"] .stat-card-green  { background: rgba(0, 230, 118, 0.06);  border-color: rgba(0, 230, 118, 0.12); }
-[data-theme="dark"] .stat-card-red    { background: rgba(255, 71, 87, 0.06);  border-color: rgba(255, 71, 87, 0.12); }
-[data-theme="dark"] .stat-card-cyan   { background: rgba(34, 211, 238, 0.06); border-color: rgba(34, 211, 238, 0.12); }
-[data-theme="dark"] .stat-card-purple { background: rgba(129, 140, 248, 0.07); border-color: rgba(129, 140, 248, 0.15); }
+/* Subtle top accent line */
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  opacity: 0.5;
+}
+
+.stat-card-green {
+  background: var(--bg-surface);
+  border: 1px solid rgba(0, 230, 118, 0.15);
+}
+.stat-card-green::after { background: var(--accent-green); }
+
+.stat-card-red {
+  background: var(--bg-surface);
+  border: 1px solid rgba(255, 71, 87, 0.15);
+}
+.stat-card-red::after { background: var(--error); }
+
+.stat-card-cyan {
+  background: var(--bg-surface);
+  border: 1px solid rgba(0, 210, 255, 0.15);
+}
+.stat-card-cyan::after { background: var(--accent); }
+
+.stat-card-purple {
+  background: var(--bg-surface);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+.stat-card-purple::after { background: var(--primary); }
+
+[data-theme="dark"] .stat-card-green  { background: rgba(0, 230, 118, 0.04);  border-color: rgba(0, 230, 118, 0.10); }
+[data-theme="dark"] .stat-card-red    { background: rgba(255, 71, 87, 0.04);  border-color: rgba(255, 71, 87, 0.10); }
+[data-theme="dark"] .stat-card-cyan   { background: rgba(34, 211, 238, 0.04); border-color: rgba(34, 211, 238, 0.10); }
+[data-theme="dark"] .stat-card-purple { background: rgba(129, 140, 248, 0.05); border-color: rgba(129, 140, 248, 0.12); }
 
 /* ============================================
    DEBT ROW UTILITIES
@@ -772,22 +807,29 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 16px 18px;
   border-radius: var(--radius-lg);
-  margin-bottom: 10px;
-  transition: box-shadow 0.15s ease;
+  margin-bottom: 8px;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  position: relative;
+}
+.debt-row:hover {
+  transform: translateX(2px);
 }
 .debt-row-owe {
-  background: rgba(255, 71, 87, 0.05);
+  background: var(--bg-surface);
   border: 1px solid rgba(255, 71, 87, 0.12);
+  border-left: 3px solid var(--error);
 }
 .debt-row-owed {
-  background: rgba(0, 230, 118, 0.05);
+  background: var(--bg-surface);
   border: 1px solid rgba(0, 230, 118, 0.12);
+  border-left: 3px solid var(--accent-green);
 }
 .debt-row-other {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--border-default);
 }
 
 /* ============================================
@@ -858,20 +900,32 @@ body {
    ============================================ */
 .empty-state {
   text-align: center;
-  padding: 56px 24px;
+  padding: 64px 32px;
   border-radius: var(--radius-xl);
   background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  border: 1px dashed var(--border-default);
+  position: relative;
+}
+.empty-state::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-xl);
+  background: radial-gradient(ellipse at 50% 0%, var(--primary-glow), transparent 70%);
+  opacity: 0.3;
+  pointer-events: none;
 }
 .empty-state-icon {
   width: 64px;
   height: 64px;
-  border-radius: var(--radius-xl);
+  border-radius: 20px;
   background: var(--primary-subtle);
+  border: 1px solid rgba(99,102,241,0.15);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 20px;
+  position: relative;
 }
 
 /* ============================================
@@ -884,27 +938,38 @@ body {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s cubic-bezier(0.4,0,0.2,1);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s cubic-bezier(0.4,0,0.2,1);
   overflow: hidden;
 }
 .pool-card:hover {
-  border-color: rgba(34, 211, 238, 0.3);
-  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.12), 0 8px 32px rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
+  border-color: rgba(34, 211, 238, 0.25);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
 }
 .pool-card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--accent), var(--primary));
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--accent), var(--primary));
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.18s ease;
 }
 .pool-card:hover::before {
   opacity: 1;
+}
+
+/* ============================================
+   SCROLLBAR HIDE (for horizontal scroll)
+   ============================================ */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 /* ============================================
@@ -1084,3 +1149,150 @@ body {
 .rounded-xl   { border-radius: var(--radius-xl); }
 .rounded-2xl  { border-radius: var(--radius-2xl); }
 .rounded-full { border-radius: var(--radius-full); }
+
+/* ============================================
+   SECTION HEADER — consistent section label
+   ============================================ */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* ============================================
+   GROUP CARD — refined with accent border
+   ============================================ */
+.group-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.4,0,0.2,1),
+              box-shadow 0.18s cubic-bezier(0.4,0,0.2,1),
+              border-color 0.18s ease;
+  position: relative;
+  overflow: hidden;
+}
+.group-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+  transition: opacity 0.18s ease;
+}
+.group-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+}
+.group-card-owe::before { background: var(--error); opacity: 1; }
+.group-card-owed::before { background: var(--accent-green); opacity: 1; }
+.group-card-settled::before { background: var(--border-default); opacity: 0.5; }
+
+/* ============================================
+   PAGE SECTION — vertical rhythm helper
+   ============================================ */
+.page-section {
+  margin-bottom: 32px;
+}
+.page-section:last-child {
+  margin-bottom: 0;
+}
+
+/* ============================================
+   BALANCE BANNER — top-of-page net balance
+   ============================================ */
+.balance-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.balance-banner-owe {
+  background: rgba(255, 71, 87, 0.05);
+  border: 1px solid rgba(255, 71, 87, 0.12);
+  color: var(--text-primary);
+}
+.balance-banner-owed {
+  background: rgba(0, 230, 118, 0.05);
+  border: 1px solid rgba(0, 230, 118, 0.12);
+  color: var(--text-primary);
+}
+.balance-banner-settled {
+  background: rgba(0, 230, 118, 0.04);
+  border: 1px solid rgba(0, 230, 118, 0.08);
+  color: var(--accent-green);
+}
+
+/* ============================================
+   TAB BAR — refined segmented control
+   ============================================ */
+.tab-bar {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+}
+.tab-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 9px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-secondary);
+}
+.tab-item:hover:not(.tab-item-active) {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.03);
+}
+.tab-item-active {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px var(--border-subtle);
+}
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+.tab-item-active .tab-badge {
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+.tab-item:not(.tab-item-active) .tab-badge {
+  background: var(--bg-elevated);
+  color: var(--text-tertiary);
+}

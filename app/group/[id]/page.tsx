@@ -17,29 +17,35 @@ import InviteShare from "@/components/group/InviteShare";
 import type { Debt, TabType } from "@/types";
 
 // Tab bar
-function TabBar({ active, onChange }: { active: TabType; onChange: (t: TabType) => void }) {
-  const tabs: { key: TabType; label: string }[] = [
-    { key: "expenses", label: "Expenses" },
-    { key: "balances", label: "Balances" },
+function TabBar({
+  active,
+  onChange,
+  expenseCount,
+  debtCount,
+}: {
+  active: TabType;
+  onChange: (t: TabType) => void;
+  expenseCount?: number;
+  debtCount?: number;
+}) {
+  const tabs: { key: TabType; label: string; count?: number }[] = [
+    { key: "expenses", label: "Expenses", count: expenseCount },
+    { key: "balances", label: "Balances", count: debtCount },
   ];
 
   return (
-    <div className="flex border-b border-[var(--border-subtle)]">
+    <div className="tab-bar">
       {tabs.map((tab) => (
         <button
           key={tab.key}
           onClick={() => onChange(tab.key)}
-          className="flex-1 py-3 text-sm font-medium transition-colors relative"
-          style={{
-            color: active === tab.key ? "var(--primary)" : "var(--text-secondary)",
-          }}
+          className={`tab-item ${active === tab.key ? "tab-item-active" : ""}`}
         >
           {tab.label}
-          {active === tab.key && (
-            <span
-              className="absolute bottom-0 left-1/4 right-1/4 h-0.5 rounded-full"
-              style={{ background: "var(--primary)" }}
-            />
+          {tab.count !== undefined && tab.count > 0 && (
+            <span className="tab-badge">
+              {tab.count}
+            </span>
           )}
         </button>
       ))}
@@ -160,7 +166,7 @@ export default function GroupPage() {
     <div className="page-content" style={{ maxWidth: 860 }}>
       {/* Header */}
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-5">
           <button
             onClick={() => router.push("/dashboard")}
             className="btn btn-ghost btn-sm p-2 rounded-lg"
@@ -176,20 +182,24 @@ export default function GroupPage() {
           )}
         </div>
 
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-4 mb-4">
           <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
-            style={{ background: "var(--bg-interactive)" }}
+            className="w-13 h-13 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+            style={{
+              background: "var(--bg-interactive)",
+              width: 52,
+              height: 52,
+            }}
           >
             {activeGroup?.emoji ?? "💰"}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)] mb-2">
+            <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)] mb-1.5">
               {activeGroup?.name ?? "Loading..."}
             </h1>
             <div className="flex items-center gap-2">
-              <AvatarGroup users={members} size={26} max={5} />
-              <span className="text-sm text-[var(--text-secondary)]">
+              <AvatarGroup users={members} size={24} max={5} />
+              <span className="text-xs text-[var(--text-tertiary)]">
                 {members.length} member{members.length !== 1 ? "s" : ""}
               </span>
             </div>
@@ -198,16 +208,14 @@ export default function GroupPage() {
 
         {user && debts.length > 0 && (
           <div
-            className="mt-4 px-4 py-3 rounded-xl text-sm"
-            style={{
-              background: totalYouOwe > 0 ? "rgba(255,71,87,0.06)" : "rgba(0,230,118,0.06)",
-              border: `1px solid ${totalYouOwe > 0 ? "rgba(255,71,87,0.12)" : "rgba(0,230,118,0.12)"}`,
-            }}
+            className={`balance-banner ${
+              totalYouOwe > 0 ? "balance-banner-owe" : totalOwedToYou > 0 ? "balance-banner-owed" : "balance-banner-settled"
+            }`}
           >
             {totalYouOwe > 0 ? (
               <span>
                 You owe{" "}
-                <span className="font-mono-nums font-bold text-[var(--error)]">
+                <span className="font-mono-nums font-bold" style={{ color: "var(--error)" }}>
                   {formatAmount(totalYouOwe, currency !== "STRK" ? CUSTOM_TOKEN_DISPLAY_DECIMALS : STRK_DISPLAY_DECIMALS)} {currency}
                 </span>{" "}
                 in total
@@ -215,25 +223,30 @@ export default function GroupPage() {
             ) : totalOwedToYou > 0 ? (
               <span>
                 You&apos;re owed{" "}
-                <span className="font-mono-nums font-bold text-[var(--accent-green)]">
+                <span className="font-mono-nums font-bold" style={{ color: "var(--accent-green)" }}>
                   {formatAmount(totalOwedToYou, currency !== "STRK" ? CUSTOM_TOKEN_DISPLAY_DECIMALS : STRK_DISPLAY_DECIMALS)} {currency}
                 </span>{" "}
                 in total
               </span>
             ) : (
-              <span className="font-semibold text-[var(--accent-green)]">✓ You&apos;re all settled up!</span>
+              <span className="font-semibold" style={{ color: "var(--accent-green)" }}>All settled up</span>
             )}
           </div>
         )}
       </div>
 
       {/* Tab bar */}
-      <div>
-        <TabBar active={tab} onChange={setTab} />
+      <div className="mb-4">
+        <TabBar
+          active={tab}
+          onChange={setTab}
+          expenseCount={expenses.length}
+          debtCount={debts.length}
+        />
       </div>
 
       {/* Tab content */}
-      <div className="pt-4 pb-24">
+      <div className="pb-24">
         {tab === "expenses" && (
           <ExpensesList
             expenses={expenses}
@@ -276,14 +289,14 @@ export default function GroupPage() {
       {tab === "expenses" && (
         <Link
           href={`/group/${groupId}/add-expense`}
-          className="fixed bottom-24 right-6 w-14 h-14 rounded-2xl flex items-center justify-center z-50 shadow-lg transition-transform hover:scale-105 active:scale-95"
+          className="fixed bottom-24 right-6 w-12 h-12 rounded-xl flex items-center justify-center z-50 transition-all hover:scale-105 active:scale-95"
           style={{
-            background: "linear-gradient(135deg, #6C5CE7, #5A4BD1)",
-            boxShadow: "0 8px 24px rgba(108, 92, 231, 0.4)",
+            background: "linear-gradient(135deg, var(--primary), var(--primary-hover))",
+            boxShadow: "var(--shadow-btn)",
           }}
           aria-label="Add expense"
         >
-          <Plus size={24} color="white" strokeWidth={2.5} />
+          <Plus size={22} color="white" strokeWidth={2.5} />
         </Link>
       )}
 

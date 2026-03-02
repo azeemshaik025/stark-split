@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Check } from "lucide-react";
 import { useStore } from "@/store/useStore";
@@ -13,6 +13,20 @@ import {
 import { getInitials, getAvatarGradient, truncateAddress } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import { toast, ToastContainer } from "@/components/ui/Toast";
+
+// Quick category suggestions with emoji
+const QUICK_CATEGORIES: { label: string; emoji: string }[] = [
+  { label: "Dinner", emoji: "🍕" },
+  { label: "Coffee", emoji: "☕" },
+  { label: "Groceries", emoji: "🛒" },
+  { label: "Drinks", emoji: "🍺" },
+  { label: "Rent", emoji: "🏠" },
+  { label: "Uber", emoji: "🚗" },
+  { label: "Hotel", emoji: "🏨" },
+  { label: "Movies", emoji: "🎬" },
+  { label: "Flights", emoji: "✈️" },
+  { label: "Shopping", emoji: "🛍️" },
+];
 
 export default function AddExpensePage() {
   const params = useParams();
@@ -61,6 +75,10 @@ export default function AddExpensePage() {
     const match = raw.match(new RegExp(`^\\d*\\.?\\d{0,${maxDecimals}}`));
     if (match) setAmount(match[0]);
   }
+
+  const handleQuickCategory = useCallback((label: string, emoji: string) => {
+    setDescription(`${emoji} ${label}`);
+  }, []);
 
   async function handleSubmit() {
     const numAmount = parseFloat(amount);
@@ -119,9 +137,15 @@ export default function AddExpensePage() {
         : null
       : null;
 
+  // Per-person amount for equal split preview
+  const perPersonAmount = splitAmong.size > 0 && numAmount > 0
+    ? (numAmount / splitAmong.size).toFixed(maxDecimals).replace(/\.?0+$/, "")
+    : null;
+
   return (
     <div className="flex justify-center px-5 py-6 pb-24">
       <div className="w-full max-w-md flex flex-col min-h-[calc(100vh-140px)]">
+        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => router.back()} className="btn btn-ghost btn-sm p-2 rounded-lg">
             <ArrowLeft size={20} />
@@ -130,15 +154,32 @@ export default function AddExpensePage() {
           <div className="w-10" />
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center pb-6 relative">
+        <div className="flex-1 flex flex-col items-center pb-6 relative">
+          {/* Background glow */}
           <div
-            className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(108,92,231,0.1) 0%, transparent 70%)" }}
+            className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(108,92,231,0.08) 0%, transparent 70%)" }}
           />
 
-          {/* Amount — native input: keyboard on laptop, numeric keypad on mobile */}
-          <div style={{ position: "relative", width: "100%", maxWidth: 280, marginBottom: amountError ? 8 : 32 }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8, width: "100%", justifyContent: "center" }}>
+          {/* Amount input */}
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              maxWidth: 300,
+              marginBottom: amountError ? 8 : 28,
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                gap: 8,
+                width: "100%",
+                justifyContent: "center",
+              }}
+            >
               <input
                 type="text"
                 inputMode="decimal"
@@ -151,7 +192,11 @@ export default function AddExpensePage() {
                   fontSize: "clamp(2.5rem, 16vw, 4rem)",
                   fontWeight: 800,
                   letterSpacing: "-0.03em",
-                  color: amountError ? "var(--error)" : numAmount > 0 ? "var(--text-primary)" : "var(--text-tertiary)",
+                  color: amountError
+                    ? "var(--error)"
+                    : numAmount > 0
+                    ? "var(--text-primary)"
+                    : "var(--text-tertiary)",
                   background: "none",
                   border: "none",
                   outline: "none",
@@ -160,10 +205,32 @@ export default function AddExpensePage() {
                   caretColor: "var(--primary)",
                 }}
               />
-              <span style={{ fontSize: "1.25rem", fontWeight: 700, color: amountError ? "var(--error)" : "var(--text-tertiary)", marginBottom: 8 }}>
+              <span
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: 700,
+                  color: amountError ? "var(--error)" : "var(--text-tertiary)",
+                  marginBottom: 8,
+                }}
+              >
                 {currency}
               </span>
             </div>
+
+            {/* Per-person preview */}
+            {perPersonAmount && !amountError && splitAmong.size > 1 && (
+              <div
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mt-2"
+                style={{
+                  background: "var(--primary-subtle)",
+                  color: "var(--primary)",
+                  border: "1px solid rgba(99,102,241,0.2)",
+                }}
+              >
+                {perPersonAmount} {currency} / person · {splitAmong.size} people
+              </div>
+            )}
+
             {amountError && (
               <p className="text-center text-xs font-semibold mt-1 mb-6" style={{ color: "var(--error)" }}>
                 {amountError}
@@ -171,7 +238,7 @@ export default function AddExpensePage() {
             )}
           </div>
 
-          {/* Description */}
+          {/* Description input */}
           <input
             style={{
               background: "none",
@@ -183,8 +250,8 @@ export default function AddExpensePage() {
               fontSize: "1.125rem",
               color: description ? "var(--text-primary)" : "var(--text-tertiary)",
               width: "100%",
-              maxWidth: 280,
-              marginBottom: 28,
+              maxWidth: 300,
+              marginBottom: 16,
               transition: "border-color 0.15s ease",
             }}
             placeholder="What's this for?"
@@ -192,12 +259,63 @@ export default function AddExpensePage() {
             onChange={(e) => setDescription(e.target.value)}
           />
 
+          {/* Quick category chips */}
+          <div style={{ width: "100%", maxWidth: 360, marginBottom: 24 }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                overflowX: "auto",
+                paddingBottom: 4,
+                scrollbarWidth: "none",
+              }}
+            >
+              {QUICK_CATEGORIES.map(({ label, emoji }) => {
+                const isSelected = description === `${emoji} ${label}`;
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => handleQuickCategory(label, emoji)}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      padding: "6px 12px",
+                      borderRadius: 20,
+                      background: isSelected ? "var(--primary-subtle)" : "var(--bg-surface)",
+                      border: `1px solid ${isSelected ? "var(--primary)" : "var(--border-subtle)"}`,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      fontSize: "0.8125rem",
+                      fontWeight: 600,
+                      color: isSelected ? "var(--primary)" : "var(--text-secondary)",
+                      transition: "all 0.15s ease",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span>{emoji}</span>
+                    <span>{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Paid by */}
           <div style={{ width: "100%", maxWidth: 320, marginBottom: 20 }}>
-            <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textAlign: "center", marginBottom: 10 }}>
-              PAID BY
+            <p className="text-label" style={{ textAlign: "center", marginBottom: 10 }}>
+              Paid By
             </p>
-            <div style={{ display: "flex", gap: 8, overflowX: "auto", justifyContent: "center", paddingBottom: 4 }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                overflowX: "auto",
+                justifyContent: "center",
+                paddingBottom: 4,
+              }}
+            >
               {members.map((member) => {
                 const isSelected = paidBy === member.id;
                 const isYou = member.id === user?.id;
@@ -258,8 +376,8 @@ export default function AddExpensePage() {
 
           {/* Split among */}
           <div style={{ width: "100%", maxWidth: 320, marginBottom: 20 }}>
-            <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textAlign: "center", marginBottom: 10 }}>
-              SPLIT AMONG
+            <p className="text-label" style={{ textAlign: "center", marginBottom: 10 }}>
+              Split Among
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
               {members.map((member) => {
@@ -294,7 +412,7 @@ export default function AddExpensePage() {
                       transition: "all 0.15s ease",
                     }}
                   >
-                    {isSelected ? <Check size={14} color="var(--primary)" /> : null}
+                    {isSelected && <Check size={13} color="var(--primary)" />}
                     <span
                       style={{
                         fontSize: "0.8125rem",
@@ -308,7 +426,14 @@ export default function AddExpensePage() {
                 );
               })}
             </div>
-            <p style={{ fontSize: "0.6875rem", color: "var(--text-tertiary)", textAlign: "center", marginTop: 8 }}>
+            <p
+              style={{
+                fontSize: "0.6875rem",
+                color: "var(--text-tertiary)",
+                textAlign: "center",
+                marginTop: 8,
+              }}
+            >
               {splitAmong.size} of {members.length} selected · tap to toggle
             </p>
           </div>
@@ -325,7 +450,8 @@ export default function AddExpensePage() {
               !amount ||
               numAmount <= 0 ||
               !description.trim() ||
-              (isCustomToken && (numAmount < MIN_CUSTOM_TOKEN_AMOUNT || numAmount > MAX_CUSTOM_TOKEN_AMOUNT))
+              (isCustomToken &&
+                (numAmount < MIN_CUSTOM_TOKEN_AMOUNT || numAmount > MAX_CUSTOM_TOKEN_AMOUNT))
             }
           >
             Add Expense

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Copy, Check, Droplets, ExternalLink } from "lucide-react";
+import { LogOut, Copy, Check, Droplets, ExternalLink, RefreshCw, User, Wallet, Globe, AlertTriangle } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { updateUserProfile } from "@/lib/supabase";
 import { truncateAddress, copyToClipboard, formatBalance, getExplorerTxUrl } from "@/lib/utils";
@@ -13,7 +13,16 @@ import Avatar from "@/components/ui/Avatar";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user, walletAddress, wallet, walletBalances, disconnectWallet, refreshBalances, refreshUser, setUserDisplayName } = useStore();
+  const {
+    user,
+    walletAddress,
+    wallet,
+    walletBalances,
+    disconnectWallet,
+    refreshBalances,
+    refreshUser,
+    setUserDisplayName,
+  } = useStore();
 
   const [displayName, setDisplayName] = useState(user?.display_name ?? "");
 
@@ -21,7 +30,6 @@ export default function SettingsPage() {
     setDisplayName(user?.display_name ?? "");
   }, [user?.display_name]);
 
-  // Auto-refresh balances on mount (independent fetcher — only needs walletAddress)
   useEffect(() => {
     if (walletAddress) {
       refreshBalances();
@@ -32,6 +40,7 @@ export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
   const [faucetLoading, setFaucetLoading] = useState(false);
   const [faucetTxHash, setFaucetTxHash] = useState<string | null>(null);
+  const [refreshingBalances, setRefreshingBalances] = useState(false);
 
   async function handleSave() {
     if (!user) return;
@@ -54,6 +63,12 @@ export default function SettingsPage() {
     await copyToClipboard(walletAddress);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleRefreshBalances() {
+    setRefreshingBalances(true);
+    await refreshBalances();
+    setRefreshingBalances(false);
   }
 
   async function handleFaucet() {
@@ -81,7 +96,6 @@ export default function SettingsPage() {
     }
   }
 
-  // Auth guard: if not connected, show connect prompt
   if (!walletAddress) {
     return (
       <div className="page-content flex flex-col items-center justify-center min-h-[60vh]">
@@ -99,10 +113,7 @@ export default function SettingsPage() {
           <p className="text-[var(--text-secondary)] text-sm sm:text-base max-w-[320px] mx-auto leading-relaxed mb-8">
             Sign in to access your settings.
           </p>
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="btn btn-primary w-full"
-          >
+          <button onClick={() => router.push("/dashboard")} className="btn btn-primary w-full">
             Go to Dashboard
           </button>
         </div>
@@ -112,32 +123,49 @@ export default function SettingsPage() {
 
   return (
     <div className="page-content" style={{ maxWidth: 640 }}>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 4 }}>Settings</h1>
-        <p style={{ color: "var(--text-secondary)" }}>Manage your profile and wallet</p>
+      <div className="mb-8">
+        <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)] mb-1">
+          Settings
+        </h1>
+        <p className="text-xs text-[var(--text-tertiary)]">Manage your profile and wallet</p>
       </div>
 
       {/* Profile card */}
-      <div className="card" style={{ marginBottom: 16 }}>
-        <h2 style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 20 }}>Profile</h2>
+      <div className="card mb-4">
+        <div className="flex items-center gap-2.5 mb-5">
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ background: "var(--primary-subtle)" }}
+          >
+            <User size={14} color="var(--primary)" />
+          </div>
+          <h2 className="text-label" style={{ color: "var(--text-secondary)", margin: 0 }}>
+            Profile
+          </h2>
+        </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+        <div className="flex items-center gap-4 mb-6">
           <Avatar user={user} size={56} showBorder={false} />
           <div>
-            <p style={{ fontWeight: 700, fontSize: "1rem" }}>{user?.display_name || truncateAddress(walletAddress ?? "", 4) || "Anonymous"}</p>
-            <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)" }}>{truncateAddress(walletAddress ?? "")}</p>
+            <p className="font-bold text-base text-[var(--text-primary)]">
+              {user?.display_name || truncateAddress(walletAddress ?? "", 4) || "Anonymous"}
+            </p>
+            <p className="text-sm text-[var(--text-secondary)] font-mono">
+              {truncateAddress(walletAddress ?? "")}
+            </p>
           </div>
         </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>
+        <div className="mb-4">
+          <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">
             Display name
           </label>
           <input
             className="input"
-            placeholder="Your name"
+            placeholder="Your name (shown to group members)"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSave()}
           />
         </div>
 
@@ -147,78 +175,155 @@ export default function SettingsPage() {
       </div>
 
       {/* Wallet card */}
-      <div className="card" style={{ marginBottom: 16 }}>
-        <h2 style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 20 }}>Wallet</h2>
+      <div className="card mb-4">
+        <div className="flex items-center gap-2.5 mb-5">
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ background: "rgba(0,210,255,0.08)" }}
+          >
+            <Wallet size={14} color="var(--accent)" />
+          </div>
+          <h2 className="text-label" style={{ color: "var(--text-secondary)", margin: 0 }}>
+            Wallet
+          </h2>
+        </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <p style={{ fontSize: "0.75rem", color: "var(--text-tertiary)", marginBottom: 6 }}>Address</p>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <code style={{ fontSize: "0.875rem", color: "var(--text-secondary)", flex: 1, background: "var(--bg-interactive)", padding: "10px 14px", borderRadius: 10 }}>
+        <div className="mb-4">
+          <p className="text-xs text-[var(--text-tertiary)] mb-2">Address</p>
+          <div className="flex items-center gap-2">
+            <code
+              className="flex-1 font-mono text-sm px-3 py-2.5 rounded-xl"
+              style={{
+                background: "var(--bg-interactive)",
+                color: "var(--text-secondary)",
+                border: "1px solid var(--border-subtle)",
+              }}
+            >
               {truncateAddress(walletAddress ?? "", 10)}
             </code>
-            <button onClick={handleCopy} className="btn btn-secondary btn-sm" style={{ padding: "10px 12px" }}>
+            <button
+              onClick={handleCopy}
+              className="btn btn-secondary btn-sm"
+              style={{ padding: "10px 12px" }}
+              title="Copy full address"
+            >
               {copied ? <Check size={14} color="var(--accent-green)" /> : <Copy size={14} />}
             </button>
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10, paddingTop: 16, borderTop: "1px solid var(--border-subtle)" }}>
+        <div
+          className="grid grid-cols-2 gap-3 pt-4 mb-3"
+          style={{ borderTop: "1px solid var(--border-subtle)" }}
+        >
           {[
-            { label: "STRK", value: walletBalances.strk },
-            { label: CUSTOM_TOKEN_SYMBOL, value: walletBalances.customToken },
+            { label: "STRK Balance", value: walletBalances.strk, color: "var(--accent)" },
+            { label: CUSTOM_TOKEN_SYMBOL, value: walletBalances.customToken, color: "var(--warning)" },
           ].map((b) => (
-            <div key={b.label} style={{ textAlign: "center", padding: "12px", background: "var(--bg-interactive)", borderRadius: 10 }}>
-              <p className="font-mono-nums" style={{ fontWeight: 700, marginBottom: 2 }}>
+            <div
+              key={b.label}
+              className="text-center p-3 rounded-xl"
+              style={{ background: "var(--bg-interactive)" }}
+            >
+              <p
+                className="font-mono-nums font-bold text-lg"
+                style={{ color: b.color, marginBottom: 2 }}
+              >
                 {formatBalance(b.value)}
               </p>
-              <p style={{ fontSize: "0.75rem", color: "var(--text-tertiary)" }}>{b.label}</p>
+              <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                {b.label}
+              </p>
             </div>
           ))}
         </div>
 
-        <button onClick={() => refreshBalances()} className="btn btn-ghost btn-sm" style={{ marginTop: 12, width: "100%", fontSize: "0.8125rem" }}>
-          Refresh balances
+        <button
+          onClick={handleRefreshBalances}
+          className="btn btn-ghost btn-sm w-full"
+          style={{ fontSize: "0.8125rem" }}
+          disabled={refreshingBalances}
+        >
+          <RefreshCw size={13} className={refreshingBalances ? "animate-spin" : ""} />
+          {refreshingBalances ? "Refreshing..." : "Refresh balances"}
         </button>
       </div>
 
-      {/* Faucet card */}
-      <div className="card" style={{ marginBottom: 16 }}>
-        <h2 style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 20 }}>Testnet Faucet</h2>
-        <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginBottom: 16 }}>
-          Get 0.01 {CUSTOM_TOKEN_SYMBOL} + 5 STRK sent to your connected wallet. One request per address per 24 hours.
-        </p>
-        <Button
-          size="sm"
-          loading={faucetLoading}
-          onClick={handleFaucet}
-          style={{ marginBottom: faucetTxHash ? 12 : 0 }}
-        >
-          <Droplets size={16} style={{ marginRight: 6 }} />
-          Get testing funds
-        </Button>
-        {faucetTxHash && (
-          <a
-            href={getExplorerTxUrl(faucetTxHash, NETWORK)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-ghost btn-sm"
-            style={{ width: "100%", fontSize: "0.8125rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+      {/* Faucet card (Sepolia only) */}
+      {NETWORK !== "mainnet" && (
+        <div className="card mb-4">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: "rgba(0,230,118,0.08)" }}
+            >
+              <Droplets size={14} color="var(--accent-green)" />
+            </div>
+            <h2 className="text-label" style={{ color: "var(--text-secondary)", margin: 0 }}>
+              Testnet Faucet
+            </h2>
+          </div>
+          <p className="text-sm text-[var(--text-secondary)] mb-4">
+            Get test tokens sent to your connected wallet.{" "}
+            <span className="font-semibold">One request per address per 24 hours.</span>
+          </p>
+          <div
+            className="rounded-xl p-3 mb-4 flex items-start gap-2.5"
+            style={{
+              background: "rgba(0,230,118,0.06)",
+              border: "1px solid rgba(0,230,118,0.15)",
+            }}
           >
-            <ExternalLink size={14} />
-            View on Explorer
-          </a>
-        )}
-      </div>
+            <Check size={14} color="var(--accent-green)" style={{ marginTop: 2 }} />
+            <p className="text-xs" style={{ color: "var(--accent-green)" }}>
+              Sends <strong>0.01 {CUSTOM_TOKEN_SYMBOL}</strong> + <strong>5 STRK</strong> to your wallet
+            </p>
+          </div>
+          <Button
+            size="sm"
+            loading={faucetLoading}
+            onClick={handleFaucet}
+          >
+            <Droplets size={15} />
+            Get testing funds
+          </Button>
+          {faucetTxHash && (
+            <a
+              href={getExplorerTxUrl(faucetTxHash, NETWORK)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-ghost btn-sm w-full mt-2"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: "0.8125rem" }}
+            >
+              <ExternalLink size={13} />
+              View on Explorer
+            </a>
+          )}
+        </div>
+      )}
 
       {/* Network card */}
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="card mb-4">
+        <div className="flex items-center gap-2.5 mb-4">
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ background: "var(--bg-interactive)" }}
+          >
+            <Globe size={14} color="var(--text-tertiary)" />
+          </div>
+          <h2 className="text-label" style={{ color: "var(--text-secondary)", margin: 0 }}>
+            Network
+          </h2>
+        </div>
+        <div className="flex items-center justify-between">
           <div>
-            <p style={{ fontWeight: 600, marginBottom: 2 }}>
+            <p className="font-semibold text-[var(--text-primary)]">
               {NETWORK === "mainnet" ? "Starknet Mainnet" : "Starknet Sepolia"}
             </p>
-            <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)" }}>
-              {NETWORK === "mainnet" ? "Mainnet" : "Testnet"}
+            <p className="text-sm text-[var(--text-secondary)]">
+              {NETWORK === "mainnet"
+                ? "Live network — gasless via Cartridge"
+                : "Testnet — gas required for custom token"}
             </p>
           </div>
           <span className="badge badge-active">Connected</span>
@@ -226,9 +331,31 @@ export default function SettingsPage() {
       </div>
 
       {/* Danger zone */}
-      <div className="card" style={{ borderColor: "rgba(255,71,87,0.15)" }}>
-        <h2 style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--error)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 16 }}>Danger Zone</h2>
-        <Button variant="danger" onClick={() => { disconnectWallet(); router.push("/"); }}>
+      <div
+        className="card"
+        style={{ borderColor: "rgba(255,71,87,0.2)" }}
+      >
+        <div className="flex items-center gap-2.5 mb-4">
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ background: "rgba(255,71,87,0.08)" }}
+          >
+            <AlertTriangle size={14} color="var(--error)" />
+          </div>
+          <h2 className="text-label" style={{ color: "var(--error)", margin: 0 }}>
+            Danger Zone
+          </h2>
+        </div>
+        <p className="text-sm text-[var(--text-secondary)] mb-4">
+          Disconnecting will sign you out of StarkSplit. Your groups and expenses are saved.
+        </p>
+        <Button
+          variant="danger"
+          onClick={() => {
+            disconnectWallet();
+            router.push("/");
+          }}
+        >
           <LogOut size={16} /> Disconnect Wallet
         </Button>
       </div>

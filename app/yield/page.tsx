@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Sparkles, TrendingUp } from "lucide-react";
+import { Plus, Sparkles, TrendingUp, Zap } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { getStakingPositionsForGroup } from "@/lib/supabase";
 import { getLivePoolPosition } from "@/lib/starkzap";
@@ -21,7 +21,11 @@ export default function YieldPage() {
   const { poolGroups, walletAddress, user, wallet, fetchPoolGroups } = useStore();
   const [groupPositions, setGroupPositions] = useState<Record<string, StakingPosition[]>>({});
   const [modal, setModal] = useState<"create" | "join" | null>(null);
-  const [livePosition, setLivePosition] = useState<{ rewards: string; staked: string; commissionPercent: number } | null>(null);
+  const [livePosition, setLivePosition] = useState<{
+    rewards: string;
+    staked: string;
+    commissionPercent: number;
+  } | null>(null);
 
   useEffect(() => {
     if (walletAddress && user) fetchPoolGroups();
@@ -47,7 +51,7 @@ export default function YieldPage() {
     if (poolGroups.length) loadPositions();
   }, [poolGroups]);
 
-  // Fetch live rewards from chain (updates every 30s when user has positions)
+  // Fetch live rewards from chain (updates every 30s)
   useEffect(() => {
     if (!wallet || !poolGroups.length) {
       setLivePosition(null);
@@ -71,9 +75,12 @@ export default function YieldPage() {
   const allPositions = Object.values(groupPositions).flat();
   const activeOnly = allPositions.filter((p) => p.status === "active");
   const myActivePositions = activeOnly.filter((p) => p.user_id === user?.id);
-  // Use live chain data for current user when available
-  const myLiveStaked = livePosition ? parseFloat(livePosition.staked) : myActivePositions.reduce((s, p) => s + p.amount_staked, 0);
-  const myLiveRewards = livePosition ? parseFloat(livePosition.rewards) : myActivePositions.reduce((s, p) => s + p.rewards_earned, 0);
+  const myLiveStaked = livePosition
+    ? parseFloat(livePosition.staked)
+    : myActivePositions.reduce((s, p) => s + p.amount_staked, 0);
+  const myLiveRewards = livePosition
+    ? parseFloat(livePosition.rewards)
+    : myActivePositions.reduce((s, p) => s + p.rewards_earned, 0);
   const othersStaked = activeOnly.filter((p) => p.user_id !== user?.id).reduce((s, p) => s + p.amount_staked, 0);
   const othersRewards = activeOnly.filter((p) => p.user_id !== user?.id).reduce((s, p) => s + p.rewards_earned, 0);
   const totalStaked = othersStaked + myLiveStaked;
@@ -101,8 +108,10 @@ export default function YieldPage() {
           <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight mb-2 text-[var(--text-primary)]">
             Connect to view yield
           </h2>
-          <p className="text-[var(--text-secondary)] text-sm sm:text-base max-w-[320px] mx-auto leading-relaxed mb-8">
-            Create or join a group pool to stake STRK and earn ~4.8% APR. All transactions are gasless.
+          <p
+            className="text-[var(--text-secondary)] text-sm sm:text-base max-w-[320px] mx-auto leading-relaxed mb-8"
+          >
+            Create or join a group pool to stake STRK and earn ~{ESTIMATED_APR}% APR. All transactions are gasless.
           </p>
           <ConnectButton prominent />
         </div>
@@ -112,27 +121,29 @@ export default function YieldPage() {
 
   return (
     <div className="page-content">
+      {/* Page header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)] mb-1">
-          Yield Overview
+        <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)] mb-1">
+          Yield Pools
         </h1>
-        <p className="text-sm text-[var(--text-secondary)]">
-          Pool staking across your groups
+        <p className="text-xs text-[var(--text-tertiary)]">
+          Pool STRK with friends and earn staking rewards together
         </p>
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
         <div className="card-gradient-border p-5">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full animate-pulse-dot bg-[var(--accent-green)]" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-green)]">
+            <div className="w-2 h-2 rounded-full animate-pulse-dot bg-[var(--accent)]" />
+            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--accent)" }}>
               Total staked
             </span>
           </div>
-          <div className="font-mono-nums text-xl font-extrabold text-[var(--accent)]">
+          <div className="font-mono-nums text-xl font-extrabold" style={{ color: "var(--accent)" }}>
             {formatAmount(totalStaked)}
           </div>
-          <div className="text-sm text-[var(--text-secondary)] mt-0.5">STRK</div>
+          <div className="text-xs text-[var(--text-secondary)] mt-0.5">STRK</div>
         </div>
 
         <div
@@ -142,13 +153,19 @@ export default function YieldPage() {
             border: "1px solid rgba(0,230,118,0.12)",
           }}
         >
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-2">
-            Rewards earned
-          </p>
-          <div className="font-mono-nums text-xl font-extrabold text-[var(--accent-green)]">
-            {formatAmount(totalRewards, 6)}
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 rounded-full bg-[var(--accent-green)]" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+              Rewards earned
+            </span>
           </div>
-          <div className="text-sm text-[var(--text-secondary)] mt-0.5">STRK</div>
+          <div
+            className="font-mono-nums text-xl font-extrabold yield-number"
+            style={{ color: "var(--accent-green)" }}
+          >
+            +{formatAmount(totalRewards, 6)}
+          </div>
+          <div className="text-xs text-[var(--text-secondary)] mt-0.5">STRK</div>
         </div>
 
         <div
@@ -158,13 +175,16 @@ export default function YieldPage() {
             border: "1px solid rgba(108,92,231,0.12)",
           }}
         >
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-2">
-            Est. APR
-          </p>
-          <div className="font-mono-nums text-xl font-extrabold text-[var(--primary)]">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp size={12} color="var(--primary)" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+              Est. APR
+            </span>
+          </div>
+          <div className="font-mono-nums text-xl font-extrabold" style={{ color: "var(--primary)" }}>
             ~{ESTIMATED_APR}%
           </div>
-          <div className="text-sm text-[var(--text-secondary)] mt-0.5">
+          <div className="text-xs text-[var(--text-secondary)] mt-0.5">
             {livePosition != null && livePosition.commissionPercent > 0
               ? `Net after ${livePosition.commissionPercent}% fee`
               : "Delegation"}
@@ -172,26 +192,30 @@ export default function YieldPage() {
         </div>
 
         <div className="card p-5">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-2">
-            Active
-          </p>
+          <div className="flex items-center gap-2 mb-2">
+            <Zap size={12} color="var(--text-tertiary)" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">
+              Active
+            </span>
+          </div>
           <div className="font-mono-nums text-xl font-extrabold text-[var(--text-primary)]">
             {activePositions}
           </div>
-          <div className="text-sm text-[var(--text-secondary)] mt-0.5">
-            of {poolGroups.length} group{poolGroups.length !== 1 ? "s" : ""}
+          <div className="text-xs text-[var(--text-secondary)] mt-0.5">
+            of {poolGroups.length} pool{poolGroups.length !== 1 ? "s" : ""}
           </div>
         </div>
       </div>
 
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-base font-bold text-[var(--text-primary)]">Positions by Pool</h2>
+      {/* Pools list header */}
+      <div className="section-header">
+        <h2 className="section-title">Your Pools</h2>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={() => setModal("join")}>
             Join
           </Button>
           <Button size="sm" onClick={() => setModal("create")}>
-            <Plus size={14} /> Create Pool
+            <Plus size={14} /> New Pool
           </Button>
         </div>
       </div>
@@ -201,9 +225,9 @@ export default function YieldPage() {
           <div className="empty-state-icon">
             <Sparkles size={32} color="var(--accent)" />
           </div>
-          <h3 className="text-heading mb-2">No treasuries yet</h3>
-          <p className="text-body-sm text-[var(--text-secondary)] mb-6 max-w-[220px] mx-auto">
-            Create a treasury, contribute to the pool, and stake to start earning yield.
+          <h3 className="text-heading mb-2">No pools yet</h3>
+          <p className="text-body-sm text-[var(--text-secondary)] mb-6 max-w-[240px] mx-auto">
+            Create a pool, contribute STRK, and start earning ~{ESTIMATED_APR}% APR through Starknet staking.
           </p>
           <Button onClick={() => setModal("create")}>
             <Plus size={16} /> Create a Pool
@@ -216,54 +240,92 @@ export default function YieldPage() {
             const activePositionsInGroup = positions.filter((p) => p.status === "active");
             const totalGroupStaked = activePositionsInGroup.reduce((s, p) => s + p.amount_staked, 0);
             const myPos = user ? positions.find((p) => p.user_id === user.id) : null;
+            const isStaked = myPos && myPos.status === "active";
 
             return (
               <div
                 key={group.id}
-                className="pool-card flex items-center gap-4 p-4 cursor-pointer"
+                className="pool-card"
                 onClick={() => router.push(`/pool/${group.id}`)}
               >
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
-                  style={{ background: "var(--bg-interactive)" }}
-                >
-                  {group.emoji}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-[var(--text-primary)]">{group.name}</div>
-                  <div className="text-sm text-[var(--text-secondary)]">
-                    Total:{" "}
-                    <span className="font-mono-nums font-semibold text-[var(--accent)]">
-                      {formatAmount(totalGroupStaked)} STRK
-                    </span>
-                    {myPos && (
-                      <span className="text-[var(--text-tertiary)] ml-2">
-                        · You: {formatAmount(myPos.amount_staked)} STRK
+                <div className="flex items-center gap-4">
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
+                    style={{ background: "var(--bg-interactive)" }}
+                  >
+                    {group.emoji}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-[var(--text-primary)] mb-0.5">
+                      {group.name}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+                      <span>
+                        Pool:{" "}
+                        <span className="font-mono-nums font-semibold" style={{ color: "var(--accent)" }}>
+                          {formatAmount(totalGroupStaked)} STRK
+                        </span>
                       </span>
+                      {myPos && (
+                        <span style={{ color: "var(--text-tertiary)" }}>
+                          · Mine: {formatAmount(myPos.amount_staked)} STRK
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    {myPos ? (
+                      <div className="flex flex-col items-end gap-1">
+                        <div
+                          className="font-mono-nums text-sm font-bold"
+                          style={{ color: "var(--accent-green)" }}
+                        >
+                          +{formatAmount(myPos.rewards_earned, 6)}
+                        </div>
+                        <Badge
+                          variant={myPos.status === "active" ? "active" : "pending"}
+                        >
+                          {myPos.status === "exited"
+                            ? "Withdrawn"
+                            : myPos.status === "exit_pending"
+                              ? "Exit pending"
+                              : "Active"}
+                        </Badge>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-end gap-1">
+                        <span
+                          className="text-xs font-semibold"
+                          style={{ color: "var(--text-tertiary)" }}
+                        >
+                          ~{ESTIMATED_APR}% APR
+                        </span>
+                        <Badge variant="pending">Not staked</Badge>
+                      </div>
                     )}
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  {myPos ? (
-                    <>
-                      <div className="font-mono-nums text-sm font-bold text-[var(--accent-green)]">
-                        +{formatAmount(myPos.rewards_earned, 6)} STRK
-                      </div>
-                      <Badge
-                        variant={myPos.status === "active" ? "active" : "pending"}
-                        className="mt-1"
-                      >
-                        {myPos.status === "exited"
-                          ? "Withdrawn"
-                          : myPos.status === "exit_pending"
-                            ? "Exit pending"
-                            : "Active"}
-                      </Badge>
-                    </>
-                  ) : (
-                    <Badge variant="pending">Not staked</Badge>
-                  )}
-                </div>
+
+                {/* Progress bar for staked amount */}
+                {totalGroupStaked > 0 && myPos && (
+                  <div className="mt-3">
+                    <div className="progress-bar">
+                      <div
+                        className="progress-bar-fill-green"
+                        style={{
+                          width: `${Math.min(100, (myPos.amount_staked / totalGroupStaked) * 100)}%`,
+                          height: "100%",
+                          borderRadius: 9999,
+                          background: "linear-gradient(90deg, var(--accent-green), var(--accent))",
+                          transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)",
+                        }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-[var(--text-tertiary)] mt-1">
+                      Your share: {Math.round((myPos.amount_staked / totalGroupStaked) * 100)}% of pool
+                    </p>
+                  </div>
+                )}
               </div>
             );
           })}

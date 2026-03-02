@@ -45,7 +45,7 @@ export default function PoolPage() {
   const router = useRouter();
   const poolId = params.id as string;
 
-  const { user, wallet, walletAddress, connectWallet } = useStore();
+  const { user, wallet, walletAddress, connectWallet, walletBalances } = useStore();
   const [group, setGroup] = useState<Group | null>(null);
   const [members, setMembers] = useState<User[]>([]);
   const [positions, setPositions] = useState<StakingPosition[]>([]);
@@ -249,18 +249,22 @@ export default function PoolPage() {
 
         <div className="flex items-start gap-4">
           <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0"
-            style={{ background: "var(--bg-interactive)" }}
+            className="rounded-2xl flex items-center justify-center text-2xl shrink-0"
+            style={{
+              background: "var(--bg-interactive)",
+              width: 52,
+              height: 52,
+            }}
           >
             {group?.emoji ?? "💰"}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)] mb-2">
+            <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)] mb-1.5">
               {group?.name ?? "Loading..."}
             </h1>
             <div className="flex items-center gap-2">
-              <AvatarGroup users={members} size={26} max={5} />
-              <span className="text-sm text-[var(--text-secondary)]">
+              <AvatarGroup users={members} size={24} max={5} />
+              <span className="text-xs text-[var(--text-tertiary)]">
                 {members.length} member{members.length !== 1 ? "s" : ""}
               </span>
             </div>
@@ -293,7 +297,7 @@ export default function PoolPage() {
       </div>
 
       {/* Members & their staked amounts */}
-      <h2 className="text-base font-bold text-[var(--text-primary)] mb-3">Staking by member</h2>
+      <h2 className="section-title mb-3">Staking by member</h2>
       <div className="flex flex-col gap-2 mb-8">
         {members.map((member) => {
           const pos = positions.find((p) => p.user_id === member.id);
@@ -387,25 +391,55 @@ export default function PoolPage() {
 
       {/* Stake / Withdraw */}
       <div className="card p-5">
-        <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">Your position</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-[var(--text-primary)]">Your position</h3>
+          {!myPosition && walletBalances.strk && (
+            <span className="text-xs text-[var(--text-secondary)]">
+              Balance:{" "}
+              <span className="font-mono-nums font-semibold" style={{ color: "var(--accent)" }}>
+                {parseFloat(walletBalances.strk).toFixed(4)} STRK
+              </span>
+            </span>
+          )}
+        </div>
         {myPosition ? (
-          <div className="space-y-4">
-            <div className="flex justify-between">
-              <span className="text-[var(--text-secondary)]">Staked</span>
-              <span className="font-mono-nums font-bold">
-                {livePosition ? formatAmount(livePosition.staked) : formatAmount(myPosition.amount_staked)} STRK
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[var(--text-secondary)]">Rewards</span>
-              <span className="font-mono-nums font-bold text-[var(--accent-green)]">
-                +{formatAmount(myRewardsNum, 6)} STRK
-              </span>
+          <div>
+            <div
+              className="rounded-xl p-4 mb-4"
+              style={{
+                background: "rgba(0,210,255,0.06)",
+                border: "1px solid rgba(0,210,255,0.15)",
+              }}
+            >
+              <div className="flex justify-between mb-3">
+                <span className="text-sm text-[var(--text-secondary)]">Staked</span>
+                <span className="font-mono-nums font-bold text-[var(--accent)]">
+                  {livePosition ? formatAmount(livePosition.staked) : formatAmount(myPosition.amount_staked)} STRK
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-[var(--text-secondary)]">Rewards earned</span>
+                <span className="font-mono-nums font-bold text-[var(--accent-green)]">
+                  +{formatAmount(myRewardsNum, 6)} STRK
+                </span>
+              </div>
             </div>
             {NETWORK === "sepolia" && (
-              <p className="text-xs text-[var(--text-tertiary)] mb-2">
+              <p className="text-xs text-[var(--text-tertiary)] mb-3">
                 Testnet: You pay gas (STRK). Ensure you have STRK for fees.
               </p>
+            )}
+            {myPosition.status === "exit_pending" && !isCooldownComplete(myPosition.exit_intent_at) && (
+              <div
+                className="rounded-lg p-3 mb-3 text-xs"
+                style={{
+                  background: "rgba(255,184,0,0.08)",
+                  border: "1px solid rgba(255,184,0,0.2)",
+                  color: "var(--warning)",
+                }}
+              >
+                Exit initiated. 21-day cooldown in progress. Ready when complete.
+              </div>
             )}
             <Button
               variant="danger"
@@ -418,20 +452,20 @@ export default function PoolPage() {
               {myPosition.status === "exit_pending"
                 ? isCooldownComplete(myPosition.exit_intent_at)
                   ? "Complete withdrawal"
-                  : "Withdraw in 21 days"
+                  : "Cooling down (21 days)"
                 : "Initiate withdrawal"}
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div>
+          <div>
+            <div className="mb-4">
               <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">
                 Amount to stake (STRK)
               </label>
               <input
                 type="text"
                 inputMode="decimal"
-                placeholder="0"
+                placeholder="0.00"
                 value={stakeAmount}
                 onChange={(e) => {
                   const v = e.target.value.replace(/[^0-9.]/g, "");
@@ -440,12 +474,34 @@ export default function PoolPage() {
                 }}
                 className="input w-full font-mono text-lg"
               />
+              {walletBalances.strk && (
+                <div className="flex justify-between mt-2">
+                  <span className="text-xs text-[var(--text-tertiary)]">Available</span>
+                  <button
+                    type="button"
+                    className="text-xs font-semibold"
+                    style={{ color: "var(--primary)" }}
+                    onClick={() => {
+                      const bal = parseFloat(walletBalances.strk);
+                      if (bal > 0) setStakeAmount(Math.min(bal, 1000).toFixed(4));
+                    }}
+                  >
+                    {parseFloat(walletBalances.strk).toFixed(4)} STRK (max)
+                  </button>
+                </div>
+              )}
             </div>
+            {NETWORK === "sepolia" && (
+              <p className="text-xs text-[var(--text-tertiary)] mb-3">
+                Testnet: Gas required (STRK). Max 1000 STRK for demo.
+              </p>
+            )}
             <Button
               fullWidth
               loading={loading}
               onClick={handleStake}
               disabled={!stakeAmount || parseFloat(stakeAmount) <= 0}
+              className="btn-gradient"
             >
               <TrendingUp size={16} /> Stake STRK
             </Button>

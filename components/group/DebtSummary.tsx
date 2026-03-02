@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowRight, CheckCircle } from "lucide-react";
+import { ArrowRight, CheckCircle, Zap } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
-import { CUSTOM_TOKEN_SYMBOL, CUSTOM_TOKEN_DISPLAY_DECIMALS, STRK_DISPLAY_DECIMALS } from "@/lib/constants";
+import { CUSTOM_TOKEN_SYMBOL, CUSTOM_TOKEN_DISPLAY_DECIMALS, STRK_DISPLAY_DECIMALS, NETWORK } from "@/lib/constants";
 import { formatAmount, truncateAddress } from "@/lib/utils";
 import type { Debt, User } from "@/types";
 
@@ -98,11 +98,12 @@ export default function DebtSummary({
 
           {isYouOwe && onSettle && (
             <Button
-              variant="danger"
+              variant="primary"
               size="sm"
               onClick={() => onSettle(debt)}
-              style={{ padding: "6px 12px", fontSize: "0.75rem" }}
+              style={{ padding: "6px 14px", fontSize: "0.75rem", gap: 4 }}
             >
+              {NETWORK === "mainnet" ? <Zap size={12} /> : null}
               Pay
             </Button>
           )}

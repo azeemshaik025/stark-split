@@ -68,3 +68,6 @@ cleanup/
 # Misc
 *.pem
 CLAUDE.md
+
+# Reference / design assets (not needed in repo)
+inspirations/

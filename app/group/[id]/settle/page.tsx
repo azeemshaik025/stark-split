@@ -2,16 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, CheckCircle, XCircle, ExternalLink } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, ExternalLink, ArrowRight } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useStore } from "@/store/useStore";
-import { truncateAddress, formatAmount, getSdkErrorMessage, getExplorerTxUrl } from "@/lib/utils";
-import { CUSTOM_TOKEN_DISPLAY_DECIMALS } from "@/lib/constants";
+import { truncateAddress, formatAmount, getSdkErrorMessage, getExplorerTxUrl, getAvatarGradient, getInitials } from "@/lib/utils";
+import { CUSTOM_TOKEN_DISPLAY_DECIMALS, NETWORK, CUSTOM_TOKEN_SYMBOL } from "@/lib/constants";
 import { toast, ToastContainer } from "@/components/ui/Toast";
 import Button from "@/components/ui/Button";
-import Avatar from "@/components/ui/Avatar";
 import type { TxStatus } from "@/types";
-import { NETWORK, CUSTOM_TOKEN_SYMBOL } from "@/lib/constants";
 
 export default function SettlePage() {
   const params = useParams();
@@ -67,8 +65,10 @@ export default function SettlePage() {
 
   const isYouPaying = from === user?.id;
 
+  const fromName = fromUser?.display_name ?? truncateAddress(from);
+  const toName = toUser?.display_name ?? truncateAddress(to);
+
   async function handleSettle() {
-    // Restore wallet if we have walletAddress but wallet was lost (e.g. after refresh)
     if (!wallet && walletAddress) {
       try {
         await connectWallet();
@@ -116,18 +116,55 @@ export default function SettlePage() {
     }
   }
 
+  function UserBubble({ userId, user: u, label }: { userId: string; user?: { display_name?: string | null; wallet_address?: string } | null; label?: string }) {
+    const name = label ?? u?.display_name ?? truncateAddress(userId);
+    return (
+      <div style={{ textAlign: "center" }}>
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: "50%",
+            background: getAvatarGradient(userId),
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 18,
+            fontWeight: 700,
+            color: "white",
+            margin: "0 auto 8px",
+          }}
+        >
+          {getInitials(name)}
+        </div>
+        <p
+          style={{
+            fontSize: "0.8125rem",
+            fontWeight: 600,
+            color: userId === user?.id
+              ? (isYouPaying && userId === from ? "var(--error)" : "var(--accent-green)")
+              : "var(--text-primary)",
+          }}
+        >
+          {name}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex justify-center px-5 py-8 pb-16">
       <div className="w-full max-w-md">
+        {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <button onClick={() => router.back()} className="btn btn-ghost btn-sm p-2 rounded-lg">
             <ArrowLeft size={20} />
           </button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-lg font-bold text-[var(--text-primary)]">Settle Up</h1>
             <p className="text-sm text-[var(--text-secondary)]">{activeGroup?.name ?? "Group"}</p>
           </div>
-          <div className="ml-auto">
+          <div>
             {NETWORK === "mainnet" ? (
               <span className="badge-gasless">
                 <span className="badge-gasless-dot" />
@@ -135,23 +172,33 @@ export default function SettlePage() {
               </span>
             ) : (
               <span className="badge-user-pays">
-                Fee may apply (testnet)
+                Fee may apply
               </span>
             )}
           </div>
         </div>
 
-        <div className="card text-center p-8 mb-6">
+        {/* Main card */}
+        <div
+          className="rounded-2xl mb-6 overflow-hidden"
+          style={{
+            background: "var(--bg-surface)",
+            border: "1px solid var(--border-subtle)",
+            boxShadow: "var(--shadow-md)",
+          }}
+        >
           {txStatus === "confirmed" ? (
-            <>
-              {/* Success state */}
-              <div className="settle-status-icon settle-status-icon-success">
+            <div className="p-8 text-center">
+              <div
+                className="settle-status-icon settle-status-icon-success"
+                style={{ marginBottom: 20 }}
+              >
                 <CheckCircle size={36} color="var(--accent-green)" />
               </div>
-              <h2 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: 8 }}>
-                Settled!
+              <h2 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: 6 }}>
+                Settled! 🎉
               </h2>
-              <p style={{ color: "var(--text-secondary)", marginBottom: 20 }}>
+              <p style={{ color: "var(--text-secondary)", marginBottom: 24, fontSize: "0.9375rem" }}>
                 Payment confirmed on Starknet
               </p>
               {txHash && (
@@ -160,131 +207,142 @@ export default function SettlePage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-ghost btn-sm"
+                  style={{ margin: "0 auto" }}
                 >
                   View on explorer <ExternalLink size={12} />
                 </a>
               )}
-            </>
+            </div>
           ) : txStatus === "failed" ? (
-            <>
-              {/* Failed state */}
-              <div className="settle-status-icon settle-status-icon-failed">
+            <div className="p-8 text-center">
+              <div className="settle-status-icon settle-status-icon-failed" style={{ marginBottom: 20 }}>
                 <XCircle size={36} color="var(--error)" />
               </div>
               <h2 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: 8 }}>
-                Failed
+                Transaction Failed
               </h2>
-              <p style={{ color: "var(--text-secondary)", marginBottom: 8, fontSize: "0.875rem" }}>
+              <p
+                style={{
+                  color: "var(--text-secondary)",
+                  marginBottom: 8,
+                  fontSize: "0.875rem",
+                }}
+              >
                 {errorMsg}
               </p>
-              <p style={{ color: "var(--text-tertiary)", fontSize: "0.75rem", marginBottom: 16 }}>
-                Check that you have enough {CUSTOM_TOKEN_SYMBOL} and the recipient has connected their wallet.
+              <p
+                style={{
+                  color: "var(--text-tertiary)",
+                  fontSize: "0.75rem",
+                  marginBottom: 4,
+                }}
+              >
+                Ensure you have enough {CUSTOM_TOKEN_SYMBOL} and the recipient has connected their wallet.
               </p>
-            </>
+            </div>
           ) : (
             <>
-              {/* Payment preview */}
+              {/* Gradient header strip */}
               <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 16,
-                  marginBottom: 28,
+                  height: 4,
+                  background: "linear-gradient(90deg, var(--primary), var(--accent))",
                 }}
-              >
-                <div style={{ textAlign: "center" }}>
-                  <Avatar user={fromUser ?? { id: from }} size={48} showBorder={false} />
-                  <p
-                    style={{
-                      fontSize: "0.8125rem",
-                      marginTop: 6,
-                      fontWeight: 600,
-                      color: isYouPaying ? "var(--error)" : "var(--text-primary)",
-                    }}
-                  >
-                    {isYouPaying ? "You" : fromUser?.display_name ?? truncateAddress(from)}
-                  </p>
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 4,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 32,
-                      height: 1,
-                      background: "var(--border-default)",
-                    }}
-                  />
-                  <span
-                    style={{ fontSize: "0.6875rem", color: "var(--text-tertiary)", fontWeight: 600 }}
-                  >
-                    pays
-                  </span>
-                  <div
-                    style={{
-                      width: 32,
-                      height: 1,
-                      background: "var(--border-default)",
-                    }}
-                  />
-                </div>
-
-                <div style={{ textAlign: "center" }}>
-                  <Avatar user={toUser ?? { id: to }} size={48} showBorder={false} />
-                  <p style={{ fontSize: "0.8125rem", marginTop: 6, fontWeight: 600 }}>
-                    {to === user?.id ? "You" : toUser?.display_name ?? truncateAddress(to)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Amount */}
-              <div
-                className="font-mono-nums"
-                style={{
-                  fontSize: "3rem",
-                  fontWeight: 800,
-                  letterSpacing: "-0.03em",
-                  marginBottom: 8,
-                }}
-              >
-                {formatAmount(amount, CUSTOM_TOKEN_DISPLAY_DECIMALS)}
-              </div>
-              <p style={{ color: "var(--text-secondary)", marginBottom: 20 }}>
-                {CUSTOM_TOKEN_SYMBOL}
-              </p>
-
-              {txStatus === "pending" && (
+              />
+              <div className="p-8 text-center">
+                {/* Sender → Receiver */}
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: 8,
-                    color: "var(--text-secondary)",
-                    fontSize: "0.875rem",
+                    gap: 16,
+                    marginBottom: 32,
                   }}
                 >
-                  <svg
-                    className="animate-spin"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                  </svg>
-                  <span className="tx-pending">Confirming on Starknet...</span>
+                  <UserBubble
+                    userId={from}
+                    user={fromUser}
+                    label={isYouPaying ? "You" : fromName}
+                  />
+
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                    <div
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: "50%",
+                        background: "var(--primary-subtle)",
+                        border: "1px solid rgba(99,102,241,0.2)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <ArrowRight size={18} color="var(--primary)" />
+                    </div>
+                    <span style={{ fontSize: "0.6875rem", color: "var(--text-tertiary)", fontWeight: 600 }}>
+                      pays
+                    </span>
+                  </div>
+
+                  <UserBubble
+                    userId={to}
+                    user={toUser}
+                    label={to === user?.id ? "You" : toName}
+                  />
                 </div>
-              )}
+
+                {/* Amount */}
+                <div
+                  className="font-mono-nums"
+                  style={{
+                    fontSize: "3.5rem",
+                    fontWeight: 800,
+                    letterSpacing: "-0.03em",
+                    color: isYouPaying ? "var(--error)" : "var(--text-primary)",
+                    lineHeight: 1,
+                    marginBottom: 6,
+                  }}
+                >
+                  {formatAmount(amount, CUSTOM_TOKEN_DISPLAY_DECIMALS)}
+                </div>
+                <p
+                  style={{
+                    color: "var(--text-secondary)",
+                    marginBottom: 20,
+                    fontWeight: 600,
+                  }}
+                >
+                  {CUSTOM_TOKEN_SYMBOL}
+                </p>
+
+                {txStatus === "pending" && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      color: "var(--text-secondary)",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    <svg
+                      className="animate-spin"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    </svg>
+                    <span className="tx-pending">Confirming on Starknet...</span>
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
@@ -298,9 +356,20 @@ export default function SettlePage() {
 
         {txStatus === "idle" && !isYouPaying && (
           <div style={{ textAlign: "center" }}>
-            <p style={{ color: "var(--text-secondary)", marginBottom: 16 }}>
-              This payment will be made by {fromUser?.display_name ?? truncateAddress(from)}
-            </p>
+            <div
+              className="rounded-xl p-4 mb-4"
+              style={{
+                background: "var(--bg-surface)",
+                border: "1px solid var(--border-subtle)",
+              }}
+            >
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>
+                This payment will be made by{" "}
+                <strong style={{ color: "var(--text-primary)" }}>
+                  {fromUser?.display_name ?? truncateAddress(from)}
+                </strong>
+              </p>
+            </div>
             <Button variant="secondary" fullWidth onClick={() => router.back()}>
               Go Back
             </Button>
@@ -309,11 +378,7 @@ export default function SettlePage() {
 
         {txStatus === "failed" && (
           <div style={{ display: "flex", gap: 10 }}>
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={() => router.back()}
-            >
+            <Button variant="secondary" fullWidth onClick={() => router.back()}>
               Cancel
             </Button>
             <Button fullWidth onClick={handleSettle}>

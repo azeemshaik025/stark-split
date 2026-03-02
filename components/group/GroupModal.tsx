@@ -93,15 +93,19 @@ export default function GroupModal({ mode, groupType = "split", onClose, onSucce
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        className="w-full max-w-md rounded-2xl p-6 sm:p-8"
+        className="w-full max-w-md rounded-2xl p-6 sm:p-8 relative overflow-hidden animate-scale-in"
         style={{
           background: "var(--bg-elevated)",
           border: "1px solid var(--border-default)",
           boxShadow: "var(--shadow-modal)",
         }}
       >
+        <div
+          className="absolute top-0 left-0 right-0 h-[2px]"
+          style={{ background: "var(--accent-gradient)" }}
+        />
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-bold text-[var(--text-primary)]">
+          <h2 className="text-base font-bold text-[var(--text-primary)]">
             {mode === "create"
               ? groupType === "pool"
                 ? "Create a treasury"
@@ -111,7 +115,7 @@ export default function GroupModal({ mode, groupType = "split", onClose, onSucce
                 : "Join a group"}
           </h2>
           <button onClick={onClose} className="btn btn-ghost btn-sm p-2 rounded-lg">
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Users,
   TrendingUp,
   Settings,
 } from "lucide-react";
@@ -34,9 +33,6 @@ function SidebarNavItem({
 
   // Use cyan accent color for Pools, purple for Splits
   const activeColor = href === "/yield" ? "var(--accent)" : "var(--primary)";
-  const activeBgColor = href === "/yield"
-    ? "rgba(0, 210, 255, 0.1)"
-    : "var(--primary-subtle)";
 
   return (
     <Link
@@ -45,13 +41,14 @@ function SidebarNavItem({
         display: "flex",
         alignItems: "center",
         gap: 10,
-        padding: "10px 12px",
+        padding: "9px 12px",
         borderRadius: 10,
         color: isActive ? "var(--text-primary)" : "var(--text-secondary)",
-        background: isActive ? activeBgColor : "transparent",
+        background: isActive ? "var(--bg-interactive)" : "transparent",
         textDecoration: "none",
-        fontSize: "0.9375rem",
+        fontSize: "0.875rem",
         fontWeight: isActive ? 600 : 500,
+        letterSpacing: "-0.01em",
         transition: "all 0.15s ease",
         position: "relative",
       }}
@@ -77,18 +74,18 @@ function SidebarNavItem({
           style={{
             position: "absolute",
             left: 0,
-            top: "20%",
-            bottom: "20%",
-            width: 3,
+            top: "25%",
+            bottom: "25%",
+            width: 2.5,
             borderRadius: "0 2px 2px 0",
             background: activeColor,
           }}
         />
       )}
       <Icon
-        size={19}
+        size={18}
         strokeWidth={isActive ? 2 : 1.5}
-        color={isActive ? activeColor : undefined}
+        color={isActive ? activeColor : "var(--text-tertiary)"}
       />
       {label}
     </Link>
@@ -112,16 +109,16 @@ function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-col gap-0.5 flex-1 min-h-0 overflow-y-auto">
+      <nav className="flex flex-col gap-1 flex-1 min-h-0 overflow-y-auto">
         {NAV_ITEMS.map((item) => (
           <SidebarNavItem key={item.href} {...item} />
         ))}
       </nav>
 
       {/* Bottom area: theme toggle + connect */}
-      <div className="pt-4 pb-2 border-t border-[var(--sidebar-border)] flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-xs text-[var(--text-tertiary)] font-medium">Appearance</span>
+      <div className="pt-4 pb-2 flex flex-col gap-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+        <div className="flex items-center justify-between gap-2 px-1">
+          <span className="text-[11px] text-[var(--text-tertiary)] font-medium uppercase tracking-wider">Theme</span>
           <ThemeToggle />
         </div>
         <ConnectButton dropdownUp />

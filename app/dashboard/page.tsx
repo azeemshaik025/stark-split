@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, ChevronRight, TrendingUp, Copy } from "lucide-react";
+import { Plus, TrendingUp, Copy, ArrowUpRight, ArrowDownLeft, Wallet, ChevronRight } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { truncateAddress, formatAmount, formatBalance, copyToClipboard } from "@/lib/utils";
-import { getGroupCurrency, CUSTOM_TOKEN_SYMBOL, CUSTOM_TOKEN_DISPLAY_DECIMALS, STRK_DISPLAY_DECIMALS } from "@/lib/constants";
+import { getGroupCurrency, CUSTOM_TOKEN_SYMBOL, CUSTOM_TOKEN_DISPLAY_DECIMALS, STRK_DISPLAY_DECIMALS, ESTIMATED_APR } from "@/lib/constants";
 import Avatar from "@/components/ui/Avatar";
 import { CardSkeleton } from "@/components/ui/Skeleton";
 import Button from "@/components/ui/Button";
@@ -16,6 +16,14 @@ import Logo from "@/components/ui/Logo";
 import GroupModal from "@/components/group/GroupModal";
 import type { Group } from "@/types";
 
+// ── Time-aware greeting ───────────────────────────────────
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 // ── Group Card ────────────────────────────────────────────
 function GroupCard({ group }: { group: Group }) {
   const { getUserBalance } = useStore();
@@ -24,34 +32,47 @@ function GroupCard({ group }: { group: Group }) {
   const currency = getGroupCurrency(group.type);
   const decimals = currency !== "STRK" ? CUSTOM_TOKEN_DISPLAY_DECIMALS : STRK_DISPLAY_DECIMALS;
 
+  const balanceColor = balance > 0 ? "var(--accent-green)" : balance < 0 ? "var(--error)" : "var(--text-tertiary)";
+  const balanceLabel = balance > 0 ? "you're owed" : balance < 0 ? "you owe" : "settled";
+  const cardClass = balance < 0 ? "group-card-owe" : balance > 0 ? "group-card-owed" : "group-card-settled";
+
   return (
     <div
-      className="card card-interactive flex items-center gap-4 p-4 cursor-pointer"
+      className={`group-card ${cardClass}`}
       onClick={() => router.push(`/group/${group.id}`)}
     >
       <div
-        className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+        className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
         style={{ background: "var(--bg-interactive)" }}
       >
         {group.emoji}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-[var(--text-primary)] truncate">{group.name}</div>
-        <div className="text-sm text-[var(--text-secondary)]">
+        <div className="font-semibold text-[var(--text-primary)] truncate text-[0.9375rem]">{group.name}</div>
+        <div className="text-xs text-[var(--text-tertiary)] mt-0.5">
           {group.member_count ?? 1} member{(group.member_count ?? 1) !== 1 ? "s" : ""}
         </div>
       </div>
       <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-        <span
-          className="font-mono-nums text-sm font-bold"
-          style={{
-            color: balance > 0 ? "var(--accent-green)" : balance < 0 ? "var(--error)" : "var(--text-tertiary)",
-          }}
-        >
-          {balance !== 0 ? `${balance > 0 ? "+" : ""}${formatAmount(Math.abs(balance), decimals)} ${currency}` : "Settled"}
-        </span>
-        <ChevronRight size={16} color="var(--text-tertiary)" />
+        {balance !== 0 ? (
+          <>
+            <span
+              className="font-mono-nums text-sm font-bold"
+              style={{ color: balanceColor }}
+            >
+              {balance > 0 ? "+" : "-"}{formatAmount(Math.abs(balance), decimals)}
+            </span>
+            <span className="text-[10px] font-medium" style={{ color: balanceColor, opacity: 0.7 }}>
+              {balanceLabel}
+            </span>
+          </>
+        ) : (
+          <span className="text-xs font-medium" style={{ color: "var(--accent-green)", opacity: 0.7 }}>
+            All settled
+          </span>
+        )}
       </div>
+      <ChevronRight size={16} style={{ color: "var(--text-tertiary)", opacity: 0.4, flexShrink: 0 }} />
     </div>
   );
 }
@@ -69,22 +90,27 @@ function StatCard({
   value,
   sub,
   color,
+  icon: Icon,
 }: {
   label: string;
   value: string;
   sub?: string;
   color: "green" | "red" | "cyan" | "purple";
+  icon?: typeof ArrowUpRight;
 }) {
   return (
     <div className={`stat-card stat-card-${color}`}>
-      <p className="text-label mb-2">{label}</p>
+      <div className="flex items-center gap-1.5 mb-2">
+        {Icon && <Icon size={11} color={STAT_CARD_TEXT_COLOR[color]} strokeWidth={2.5} />}
+        <p className="text-label">{label}</p>
+      </div>
       <span
-        className="font-mono-nums text-lg font-bold block"
+        className="font-mono-nums text-lg font-bold block leading-tight"
         style={{ color: STAT_CARD_TEXT_COLOR[color] }}
       >
         {value}
       </span>
-      {sub && <p className="text-[10px] text-[var(--text-tertiary)] mt-1">{sub}</p>}
+      {sub && <p className="text-[10px] text-[var(--text-tertiary)] mt-1.5">{sub}</p>}
     </div>
   );
 }
@@ -178,13 +204,14 @@ export default function DashboardPage() {
   }
 
   const displayName = user?.display_name ?? truncateAddress(walletAddress, 4);
+  const netBalance = totalOwedToYou - totalYouOwe;
 
   return (
     <div className="page-content">
       {/* Header */}
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex justify-between items-start mb-6">
         <div>
-          <p className="text-sm text-[var(--text-secondary)] mb-1">Good day,</p>
+          <p className="text-xs font-medium text-[var(--text-tertiary)] mb-1 tracking-wide uppercase">{getGreeting()}</p>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">{displayName}</h1>
             <button
@@ -196,28 +223,84 @@ export default function DashboardPage() {
               className="btn btn-ghost btn-sm p-1.5 rounded-lg"
               title="Copy address"
             >
-              <Copy size={15} color="var(--text-tertiary)" />
+              <Copy size={14} color="var(--text-tertiary)" />
             </button>
           </div>
         </div>
         <Link href="/settings" className="block rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 focus:ring-offset-[var(--bg-base)]" aria-label="Go to settings">
-          <Avatar user={user} size={44} showBorder={false} />
+          <Avatar user={user} size={42} showBorder={false} />
         </Link>
       </div>
 
+      {/* Net balance banner */}
+      {groups.length > 0 && (totalOwedToYou > 0 || totalYouOwe > 0) && (
+        <div
+          className={`balance-banner mb-6 ${
+            netBalance < 0 ? "balance-banner-owe" : netBalance > 0 ? "balance-banner-owed" : "balance-banner-settled"
+          }`}
+        >
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{
+              background: netBalance < 0 ? "rgba(255,71,87,0.1)" : "rgba(0,230,118,0.1)",
+            }}
+          >
+            {netBalance < 0 ? (
+              <ArrowUpRight size={16} color="var(--error)" />
+            ) : (
+              <ArrowDownLeft size={16} color="var(--accent-green)" />
+            )}
+          </div>
+          <div className="flex-1">
+            <span className="text-[var(--text-secondary)]">
+              {netBalance < 0 ? "You owe " : "You're owed "}
+            </span>
+            <span
+              className="font-mono-nums font-bold"
+              style={{ color: netBalance < 0 ? "var(--error)" : "var(--accent-green)" }}
+            >
+              {formatAmount(Math.abs(netBalance), splitDecimals)} {splitCurrency}
+            </span>
+            <span className="text-[var(--text-tertiary)]"> net</span>
+          </div>
+        </div>
+      )}
+
       {/* Stats */}
-      <div className="flex gap-3 mb-8 flex-wrap">
-        <StatCard label="Owed to you" value={`${formatAmount(totalOwedToYou, splitDecimals)} ${splitCurrency}`} color="green" />
-        <StatCard label="You owe" value={`${formatAmount(totalYouOwe, splitDecimals)} ${splitCurrency}`} color="red" />
-        <StatCard label={CUSTOM_TOKEN_SYMBOL} value={formatBalance(walletBalances.customToken)} color="purple" />
-        <StatCard label="STRK balance" value={formatBalance(walletBalances.strk)} color="cyan" />
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <StatCard
+          label="Owed to you"
+          value={`${formatAmount(totalOwedToYou, splitDecimals)} ${splitCurrency}`}
+          color="green"
+          icon={ArrowDownLeft}
+        />
+        <StatCard
+          label="You owe"
+          value={`${formatAmount(totalYouOwe, splitDecimals)} ${splitCurrency}`}
+          color="red"
+          icon={ArrowUpRight}
+        />
+        <StatCard
+          label={CUSTOM_TOKEN_SYMBOL}
+          value={formatBalance(walletBalances.customToken)}
+          sub="Wallet balance"
+          color="purple"
+          icon={Wallet}
+        />
+        <StatCard
+          label="STRK"
+          value={formatBalance(walletBalances.strk)}
+          sub="Wallet balance"
+          color="cyan"
+          icon={Wallet}
+        />
       </div>
 
       {/* Layout: groups + sidebar */}
       <div className="grid lg:grid-cols-[1fr,280px] gap-8 items-start">
         <div>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-base font-bold text-[var(--text-primary)]">Your Groups</h2>
+          <div className="section-header">
+            <h2 className="section-title">Your Groups</h2>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" onClick={() => setModal("join")}>
                 Join
@@ -240,15 +323,20 @@ export default function DashboardPage() {
                 <span className="text-3xl">👥</span>
               </div>
               <h3 className="text-heading mb-2">No groups yet</h3>
-              <p className="text-body-sm text-[var(--text-secondary)] mb-6 max-w-[220px] mx-auto">
-                Create your first group to start splitting expenses and earning yield.
+              <p className="text-body-sm text-[var(--text-secondary)] mb-6 max-w-[240px] mx-auto">
+                Create your first group to start splitting expenses with friends.
               </p>
-              <Button onClick={() => setModal("create")}>
-                <Plus size={16} /> Create a Group
-              </Button>
+              <div className="flex gap-2 justify-center">
+                <Button onClick={() => setModal("create")}>
+                  <Plus size={16} /> Create Group
+                </Button>
+                <Button variant="secondary" onClick={() => setModal("join")}>
+                  Join Group
+                </Button>
+              </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               {groups.map((group) => (
                 <GroupCard key={group.id} group={group} />
               ))}
@@ -258,37 +346,49 @@ export default function DashboardPage() {
 
         {/* Sidebar */}
         <div className="flex flex-col gap-4">
-          <div className="card p-5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-4">
-              Quick Actions
-            </h3>
-            <div className="flex flex-col gap-2">
-              <Button fullWidth onClick={() => setModal("create")}>
-                <Plus size={16} /> New Group
-              </Button>
-              <Button fullWidth variant="secondary" onClick={() => setModal("join")}>
-                Join via Code
-              </Button>
-            </div>
-          </div>
-
           <div className="card-gradient-border p-5">
             <div className="flex items-center gap-2 mb-3">
               <div
                 className="w-2 h-2 rounded-full animate-pulse-dot"
-                style={{ background: "var(--accent-green)" }}
+                style={{ background: "var(--accent)" }}
               />
-              <span className="text-xs font-semibold text-[var(--accent-green)] uppercase tracking-wider">
-                Group treasury
+              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--accent)" }}>
+                Yield Pools
               </span>
             </div>
             <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-4">
-              Contribute to shared pools and earn <span className="font-bold text-[var(--accent)]">~4.8% APR</span>.
-              Settlements paid from pool.
+              Pool STRK and earn{" "}
+              <span className="font-bold" style={{ color: "var(--accent)" }}>~{ESTIMATED_APR}% APR</span>
+              {" "}through Starknet delegation staking.
             </p>
             <Button variant="secondary" size="sm" fullWidth onClick={() => router.push("/yield")}>
-              <TrendingUp size={14} /> View Yield
+              <TrendingUp size={14} /> View Pools
             </Button>
+          </div>
+
+          {/* Wallet overview */}
+          <div className="card p-5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-4">
+              Wallet
+            </h3>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-[var(--text-secondary)]">{CUSTOM_TOKEN_SYMBOL}</span>
+                <span className="font-mono-nums text-sm font-semibold" style={{ color: "var(--primary)" }}>
+                  {formatBalance(walletBalances.customToken)}
+                </span>
+              </div>
+              <div
+                className="w-full h-px"
+                style={{ background: "var(--border-subtle)" }}
+              />
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-[var(--text-secondary)]">STRK</span>
+                <span className="font-mono-nums text-sm font-semibold" style={{ color: "var(--accent)" }}>
+                  {formatBalance(walletBalances.strk)}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
