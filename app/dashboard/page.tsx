@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { Plus, TrendingUp, Copy, ArrowUpRight, ArrowDownLeft, Wallet, ChevronRight, CheckCircle2, Zap } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { truncateAddress, formatAmount, formatBalance, copyToClipboard } from "@/lib/utils";
 import { getGroupCurrency, CUSTOM_TOKEN_SYMBOL, CUSTOM_TOKEN_DISPLAY_DECIMALS, STRK_DISPLAY_DECIMALS, ESTIMATED_APR } from "@/lib/constants";
 import Avatar from "@/components/ui/Avatar";
-import { CardSkeleton } from "@/components/ui/Skeleton";
+import Skeleton, { CardSkeleton } from "@/components/ui/Skeleton";
 import Button from "@/components/ui/Button";
 import { toast, ToastContainer } from "@/components/ui/Toast";
 import ConnectButton from "@/components/wallet/ConnectButton";
@@ -77,7 +78,7 @@ function GroupCard({ group }: { group: Group }) {
 // ── Main ───────────────────────────────────────────────────
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, walletAddress, groups, isLoadingGroups, walletBalances, fetchGroups, refreshUser, refreshBalances } = useStore();
+  const { user, walletAddress, groups, isLoadingGroups, isLoadingBalances, walletBalances, fetchGroups, refreshUser, refreshBalances } = useStore();
   const [modal, setModal] = useState<"create" | "join" | null>(null);
 
   useEffect(() => {
@@ -196,7 +197,12 @@ export default function DashboardPage() {
       </div>
 
       {/* Net balance hero */}
-      <div className="dash-balance-hero mb-5">
+      <motion.div
+        className="dash-balance-hero mb-5"
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
         <div className="dash-balance-hero-inner">
           <div className="flex items-center gap-3">
             <div
@@ -243,60 +249,100 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Stats grid — 2x2 */}
-      <div className="grid grid-cols-2 gap-3 mb-5">
-        <div className="dash-stat">
-          <div className="dash-stat-icon" style={{ background: "rgba(0,230,118,0.1)" }}>
-            <ArrowDownLeft size={14} color="var(--accent-green)" strokeWidth={2.5} />
+      {/* Stats grid — 2x2, animate as one unit */}
+      <motion.div
+        className="grid grid-cols-2 gap-3 mb-5"
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
+        {[
+          {
+            bg: "rgba(0,230,118,0.1)",
+            icon: <ArrowDownLeft size={14} color="var(--accent-green)" strokeWidth={2.5} />,
+            label: "Owed to you",
+            value: formatAmount(totalOwedToYou, splitDecimals),
+            color: "var(--accent-green)",
+            currency: splitCurrency,
+            loading: false,
+          },
+          {
+            bg: "rgba(255,71,87,0.1)",
+            icon: <ArrowUpRight size={14} color="var(--error)" strokeWidth={2.5} />,
+            label: "You owe",
+            value: formatAmount(totalYouOwe, splitDecimals),
+            color: "var(--error)",
+            currency: splitCurrency,
+            loading: false,
+          },
+          {
+            bg: "var(--primary-subtle)",
+            icon: <Wallet size={14} color="var(--primary)" strokeWidth={2.5} />,
+            label: CUSTOM_TOKEN_SYMBOL,
+            value: formatBalance(walletBalances.customToken),
+            color: "var(--primary)",
+            currency: null,
+            loading: isLoadingBalances,
+          },
+          {
+            bg: "rgba(34,211,238,0.1)",
+            icon: <Wallet size={14} color="var(--accent)" strokeWidth={2.5} />,
+            label: "STRK",
+            value: formatBalance(walletBalances.strk),
+            color: "var(--accent)",
+            currency: null,
+            loading: isLoadingBalances,
+          },
+        ].map((stat) => (
+          <div key={stat.label} className="dash-stat">
+            <div className="dash-stat-icon" style={{ background: stat.bg }}>
+              {stat.icon}
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-0.5">{stat.label}</p>
+              <span className="font-mono-nums text-[0.9375rem] font-bold inline-flex items-center" style={{ color: stat.color, minHeight: 18 }}>
+                <AnimatePresence mode="wait">
+                  {stat.loading ? (
+                    <motion.span
+                      key="skeleton"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <Skeleton width={64} height={18} rounded />
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="value"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {stat.value}
+                      {stat.currency && (
+                        <span className="text-[10px] font-semibold text-[var(--text-tertiary)]"> {stat.currency}</span>
+                      )}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </span>
+            </div>
           </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-0.5">Owed to you</p>
-            <span className="font-mono-nums text-[0.9375rem] font-bold" style={{ color: "var(--accent-green)" }}>
-              {formatAmount(totalOwedToYou, splitDecimals)} <span className="text-[10px] font-semibold text-[var(--text-tertiary)]">{splitCurrency}</span>
-            </span>
-          </div>
-        </div>
-        <div className="dash-stat">
-          <div className="dash-stat-icon" style={{ background: "rgba(255,71,87,0.1)" }}>
-            <ArrowUpRight size={14} color="var(--error)" strokeWidth={2.5} />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-0.5">You owe</p>
-            <span className="font-mono-nums text-[0.9375rem] font-bold" style={{ color: "var(--error)" }}>
-              {formatAmount(totalYouOwe, splitDecimals)} <span className="text-[10px] font-semibold text-[var(--text-tertiary)]">{splitCurrency}</span>
-            </span>
-          </div>
-        </div>
-        <div className="dash-stat">
-          <div className="dash-stat-icon" style={{ background: "var(--primary-subtle)" }}>
-            <Wallet size={14} color="var(--primary)" strokeWidth={2.5} />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-0.5">{CUSTOM_TOKEN_SYMBOL}</p>
-            <span className="font-mono-nums text-[0.9375rem] font-bold" style={{ color: "var(--primary)" }}>
-              {formatBalance(walletBalances.customToken)}
-            </span>
-          </div>
-        </div>
-        <div className="dash-stat">
-          <div className="dash-stat-icon" style={{ background: "rgba(34,211,238,0.1)" }}>
-            <Wallet size={14} color="var(--accent)" strokeWidth={2.5} />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-0.5">STRK</p>
-            <span className="font-mono-nums text-[0.9375rem] font-bold" style={{ color: "var(--accent)" }}>
-              {formatBalance(walletBalances.strk)}
-            </span>
-          </div>
-        </div>
-      </div>
+        ))}
+      </motion.div>
 
       {/* Yield banner */}
-      <div
+      <motion.div
         className="dash-yield-banner mb-6"
-        onClick={() => router.push("/yield")}
+        onClick={() => router.push("/pools")}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+        whileHover={{ y: -1, transition: { duration: 0.15 } }}
+        whileTap={{ scale: 0.99 }}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="dash-yield-icon">
@@ -310,7 +356,7 @@ export default function DashboardPage() {
           </div>
         </div>
         <ChevronRight size={16} style={{ color: "var(--text-tertiary)", flexShrink: 0 }} />
-      </div>
+      </motion.div>
 
       {/* Groups section */}
       <div className="section-header">
@@ -325,37 +371,65 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {isLoadingGroups ? (
-        <div className="flex flex-col gap-3">
-          <CardSkeleton />
-          <CardSkeleton />
-          <CardSkeleton />
-        </div>
-      ) : groups.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">
-            <span className="text-3xl">👥</span>
-          </div>
-          <h3 className="text-heading mb-2">No groups yet</h3>
-          <p className="text-body-sm text-[var(--text-secondary)] mb-6 max-w-[240px] mx-auto">
-            Create your first group to start splitting expenses with friends.
-          </p>
-          <div className="flex gap-2 justify-center">
-            <Button onClick={() => setModal("create")}>
-              <Plus size={16} /> Create Group
-            </Button>
-            <Button variant="secondary" onClick={() => setModal("join")}>
-              Join Group
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {groups.map((group) => (
-            <GroupCard key={group.id} group={group} />
-          ))}
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {isLoadingGroups ? (
+          <motion.div
+            key="groups-skeleton"
+            className="flex flex-col gap-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </motion.div>
+        ) : groups.length === 0 ? (
+          <motion.div
+            key="groups-empty"
+            className="empty-state"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25 }}
+          >
+            <div className="empty-state-icon">
+              <span className="text-3xl">👥</span>
+            </div>
+            <h3 className="text-heading mb-2">No groups yet</h3>
+            <p className="text-body-sm text-[var(--text-secondary)] mb-6 max-w-[240px] mx-auto">
+              Create your first group to start splitting expenses with friends.
+            </p>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={() => setModal("create")}>
+                <Plus size={16} /> Create Group
+              </Button>
+              <Button variant="secondary" onClick={() => setModal("join")}>
+                Join Group
+              </Button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="groups-list"
+            className="flex flex-col gap-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25 }}
+          >
+            {groups.map((group, index) => (
+              <motion.div
+                key={group.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: Math.min(index * 0.03, 0.12), ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                <GroupCard group={group} />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {modal && <GroupModal mode={modal} onClose={() => setModal(null)} onSuccess={handleGroupSuccess} />}
       <ToastContainer />

@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
 import { ArrowLeft, Check } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import {
@@ -119,7 +121,13 @@ export default function AddExpensePage() {
         split_details: Object.fromEntries([...splitAmong].map((id) => [id, 1])),
       });
       toast("Expense added!", "success");
-      router.push(`/group/${groupId}`);
+      confetti({
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.7 },
+        colors: ["#6C5CE7", "#00D2FF", "#00E676"],
+      });
+      setTimeout(() => router.push(`/group/${groupId}`), 600);
     } catch {
       toast("Failed to add expense", "error");
     } finally {
@@ -218,18 +226,24 @@ export default function AddExpensePage() {
             </div>
 
             {/* Per-person preview */}
-            {perPersonAmount && !amountError && splitAmong.size > 1 && (
-              <div
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mt-2"
-                style={{
-                  background: "var(--primary-subtle)",
-                  color: "var(--primary)",
-                  border: "1px solid rgba(99,102,241,0.2)",
-                }}
-              >
-                {perPersonAmount} {currency} / person · {splitAmong.size} people
-              </div>
-            )}
+            <AnimatePresence>
+              {perPersonAmount && !amountError && splitAmong.size > 1 && (
+                <motion.div
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mt-2"
+                  style={{
+                    background: "var(--primary-subtle)",
+                    color: "var(--primary)",
+                    border: "1px solid rgba(99,102,241,0.2)",
+                  }}
+                  initial={{ opacity: 0, scale: 0.85, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.85, y: -4 }}
+                  transition={{ type: "spring", stiffness: 360, damping: 22 }}
+                >
+                  {perPersonAmount} {currency} / person · {splitAmong.size} people
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {amountError && (
               <p className="text-center text-xs font-semibold mt-1 mb-6" style={{ color: "var(--error)" }}>
@@ -273,7 +287,7 @@ export default function AddExpensePage() {
               {QUICK_CATEGORIES.map(({ label, emoji }) => {
                 const isSelected = description === `${emoji} ${label}`;
                 return (
-                  <button
+                  <motion.button
                     key={label}
                     type="button"
                     onClick={() => handleQuickCategory(label, emoji)}
@@ -290,13 +304,16 @@ export default function AddExpensePage() {
                       fontSize: "0.8125rem",
                       fontWeight: 600,
                       color: isSelected ? "var(--primary)" : "var(--text-secondary)",
-                      transition: "all 0.15s ease",
+                      transition: "background 0.15s ease, border-color 0.15s ease, color 0.15s ease",
                       flexShrink: 0,
                     }}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.96 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
                   >
                     <span>{emoji}</span>
                     <span>{label}</span>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
@@ -322,7 +339,7 @@ export default function AddExpensePage() {
                 const name = member.display_name ?? truncateAddress(member.wallet_address ?? "");
 
                 return (
-                  <button
+                  <motion.button
                     key={member.id}
                     onClick={() => setPaidBy(member.id)}
                     style={{
@@ -335,11 +352,14 @@ export default function AddExpensePage() {
                       background: isSelected ? "var(--primary-subtle)" : "var(--bg-surface)",
                       border: `1px solid ${isSelected ? "var(--primary)" : "var(--border-subtle)"}`,
                       cursor: "pointer",
-                      transition: "all 0.15s ease",
+                      transition: "background 0.15s ease, border-color 0.15s ease",
                       flexShrink: 0,
                     }}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 20 }}
                   >
-                    <div
+                    <motion.div
                       style={{
                         width: 32,
                         height: 32,
@@ -352,9 +372,33 @@ export default function AddExpensePage() {
                         fontWeight: 700,
                         color: "white",
                       }}
+                      animate={isSelected ? { scale: 1.08 } : { scale: 1 }}
+                      transition={{ type: "spring", stiffness: 380, damping: 18 }}
                     >
-                      {isSelected ? <Check size={14} /> : getInitials(name)}
-                    </div>
+                      <AnimatePresence mode="wait">
+                        {isSelected ? (
+                          <motion.span
+                            key="check"
+                            initial={{ scale: 0, rotate: -20 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            exit={{ scale: 0 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                          >
+                            <Check size={14} />
+                          </motion.span>
+                        ) : (
+                          <motion.span
+                            key="initials"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0 }}
+                            transition={{ duration: 0.1 }}
+                          >
+                            {getInitials(name)}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
                     <span
                       style={{
                         fontSize: "0.6875rem",
@@ -368,7 +412,7 @@ export default function AddExpensePage() {
                     >
                       {isYou ? "You" : name.split(" ")[0]}
                     </span>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>

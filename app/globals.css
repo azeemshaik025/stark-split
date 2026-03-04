@@ -453,7 +453,6 @@ body {
   max-width: 1040px;
   margin: 0 auto;
   padding: 24px 28px 40px;
-  animation: fadeInUp 0.15s ease;
 }
 
 @media (max-width: 768px) {
@@ -1165,6 +1164,56 @@ body {
 }
 .tx-pending {
   animation: pendingPulse 1.4s ease-in-out infinite;
+}
+
+/* ============================================
+   GLOW PULSE — connect button / CTA emphasis
+   ============================================ */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: var(--shadow-btn); }
+  50%       { box-shadow: var(--shadow-btn-hover); }
+}
+.animate-glow-pulse {
+  animation: glowPulse 2.5s ease-in-out infinite;
+}
+
+/* ============================================
+   SLIDE IN FROM BOTTOM — mobile sheet entry
+   ============================================ */
+@keyframes slideInBottom {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.animate-slide-in-bottom {
+  animation: slideInBottom 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* ============================================
+   SUBTLE SHIMMER ON YIELD NUMBER (live rewards)
+   ============================================ */
+@keyframes yieldTick {
+  0%, 100% { opacity: 1; }
+  40%       { opacity: 0.7; }
+  60%       { opacity: 1; }
+}
+.yield-live {
+  animation: yieldTick 2s ease-in-out infinite;
+}
+
+/* ============================================
+   CARD PRESS STATE — tactile depth on click
+   ============================================ */
+.card-interactive:active {
+  transform: scale(0.99) translateY(0) !important;
+}
+
+/* ============================================
+   GROUP CARD hover — slightly stronger lift on desktop
+   ============================================ */
+@media (hover: hover) {
+  .group-card:hover {
+    border-color: var(--border-default);
+  }
 }
 
 /* ============================================

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Plus, SplitSquareVertical } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { formatDateHeader, truncateAddress, formatAmount } from "@/lib/utils";
@@ -10,7 +11,7 @@ import { getGroupCurrency, CUSTOM_TOKEN_DISPLAY_DECIMALS, STRK_DISPLAY_DECIMALS 
 import { toast, ToastContainer } from "@/components/ui/Toast";
 import { AvatarGroup } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
-import { ExpenseListSkeleton } from "@/components/ui/Skeleton";
+import Skeleton, { ExpenseListSkeleton } from "@/components/ui/Skeleton";
 import ExpenseItem from "@/components/group/ExpenseItem";
 import DebtSummary from "@/components/group/DebtSummary";
 import InviteShare from "@/components/group/InviteShare";
@@ -67,11 +68,29 @@ function ExpensesList({
   isLoading: boolean;
   currency: string;
 }) {
-  if (isLoading) return <ExpenseListSkeleton count={4} />;
+  if (isLoading) {
+    return (
+      <motion.div
+        key="expenses-skeleton"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+      >
+        <ExpenseListSkeleton count={4} />
+      </motion.div>
+    );
+  }
 
   if (!expenses?.length) {
     return (
-      <div className="text-center py-14 px-6">
+      <motion.div
+        key="expenses-empty"
+        className="text-center py-14 px-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.25 }}
+      >
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
           style={{ background: "var(--primary-subtle)" }}
@@ -82,7 +101,7 @@ function ExpensesList({
         <p className="text-sm text-[var(--text-secondary)]">
           Tap the + button below to add the first expense.
         </p>
-      </div>
+      </motion.div>
     );
   }
 
@@ -134,13 +153,15 @@ export default function GroupPage() {
   } = useStore();
 
   const [tab, setTab] = useState<TabType>("expenses");
+  const [isLoadingGroup, setIsLoadingGroup] = useState(true);
 
   const expenses = groupExpenses[groupId] ?? [];
   const members = groupMembers[groupId] ?? [];
   const debts = groupDebts[groupId] ?? [];
 
   useEffect(() => {
-    fetchGroupDetails(groupId);
+    setIsLoadingGroup(true);
+    fetchGroupDetails(groupId).finally(() => setIsLoadingGroup(false));
   }, [groupId, fetchGroupDetails]);
 
   async function handleSettleDebt(debt: Debt) {
@@ -194,23 +215,46 @@ export default function GroupPage() {
             {activeGroup?.emoji ?? "💰"}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)] mb-1.5">
-              {activeGroup?.name ?? "Loading..."}
+            <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)] mb-1.5" style={{ minHeight: 24 }}>
+              <AnimatePresence mode="wait">
+                {isLoadingGroup ? (
+                  <motion.span key="name-skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+                    <Skeleton width={160} height={24} rounded />
+                  </motion.span>
+                ) : (
+                  <motion.span key="name-value" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+                    {activeGroup?.name ?? "Group"}
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </h1>
-            <div className="flex items-center gap-2">
-              <AvatarGroup users={members} size={24} max={5} />
-              <span className="text-xs text-[var(--text-tertiary)]">
-                {members.length} member{members.length !== 1 ? "s" : ""}
-              </span>
+            <div className="flex items-center gap-2" style={{ minHeight: 24 }}>
+              <AnimatePresence mode="wait">
+                {isLoadingGroup ? (
+                  <motion.span key="members-skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+                    <Skeleton width={100} height={16} rounded />
+                  </motion.span>
+                ) : (
+                  <motion.span key="members-value" className="flex items-center gap-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+                    <AvatarGroup users={members} size={24} max={5} />
+                    <span className="text-xs text-[var(--text-tertiary)]">
+                      {members.length} member{members.length !== 1 ? "s" : ""}
+                    </span>
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
 
         {user && debts.length > 0 && (
-          <div
+          <motion.div
             className={`balance-banner ${
               totalYouOwe > 0 ? "balance-banner-owe" : totalOwedToYou > 0 ? "balance-banner-owed" : "balance-banner-settled"
             }`}
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             {totalYouOwe > 0 ? (
               <span>
@@ -231,7 +275,7 @@ export default function GroupPage() {
             ) : (
               <span className="font-semibold" style={{ color: "var(--accent-green)" }}>All settled up</span>
             )}
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -247,58 +291,103 @@ export default function GroupPage() {
 
       {/* Tab content */}
       <div className="pb-24">
-        {tab === "expenses" && (
-          <ExpensesList
-            expenses={expenses}
-            currentUserId={user?.id}
-            memberCount={members.length || 1}
-            isLoading={isLoadingExpenses}
-            currency={currency}
-          />
-        )}
-
-        {tab === "balances" && (
-          <div style={{ paddingTop: 16 }}>
-            {isLoadingExpenses ? (
-              <ExpenseListSkeleton count={3} />
-            ) : !debts.length ? (
-              <div className="empty-state">
-                <div className="empty-state-icon">
-                  <span className="text-3xl">✨</span>
-                </div>
-                <h3 className="text-heading mb-2">All settled!</h3>
-                <p className="text-body-sm text-[var(--text-secondary)]">
-                  No one owes anything. Great job!
-                </p>
-              </div>
-            ) : (
-              user && (
-                <DebtSummary
-                  debts={debts}
-                  currentUserId={user.id}
-                  onSettle={handleSettleDebt}
-                  currency={currency}
-                />
-              )
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={tab}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            {tab === "expenses" && (
+              <ExpensesList
+                expenses={expenses}
+                currentUserId={user?.id}
+                memberCount={members.length || 1}
+                isLoading={isLoadingExpenses}
+                currency={currency}
+              />
             )}
-          </div>
-        )}
+
+            {tab === "balances" && (
+              <div style={{ paddingTop: 16 }}>
+                <AnimatePresence mode="wait">
+                  {isLoadingExpenses ? (
+                    <motion.div
+                      key="balances-skeleton"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <ExpenseListSkeleton count={3} />
+                    </motion.div>
+                  ) : !debts.length ? (
+                    <motion.div
+                      key="balances-empty"
+                      className="empty-state"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.25 }}
+                    >
+                      <div className="empty-state-icon">
+                        <span className="text-3xl">✨</span>
+                      </div>
+                      <h3 className="text-heading mb-2">All settled!</h3>
+                      <p className="text-body-sm text-[var(--text-secondary)]">
+                        No one owes anything. Great job!
+                      </p>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="balances-list"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.25 }}
+                    >
+                      {user && (
+                        <DebtSummary
+                          debts={debts}
+                          currentUserId={user.id}
+                          onSettle={handleSettleDebt}
+                          currency={currency}
+                        />
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* FAB — Add Expense */}
-      {tab === "expenses" && (
-        <Link
-          href={`/group/${groupId}/add-expense`}
-          className="fixed bottom-24 right-6 w-12 h-12 rounded-xl flex items-center justify-center z-50 transition-all hover:scale-105 active:scale-95"
-          style={{
-            background: "linear-gradient(135deg, var(--primary), var(--primary-hover))",
-            boxShadow: "var(--shadow-btn)",
-          }}
-          aria-label="Add expense"
-        >
-          <Plus size={22} color="white" strokeWidth={2.5} />
-        </Link>
-      )}
+      <AnimatePresence>
+        {tab === "expenses" && (
+          <motion.div
+            className="fixed bottom-24 md:bottom-6 right-6 z-50"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.5, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 22 }}
+            whileHover={{ scale: 1.07 }}
+            whileTap={{ scale: 0.93 }}
+          >
+            <Link
+              href={`/group/${groupId}/add-expense`}
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, var(--primary), var(--primary-hover))",
+                boxShadow: "var(--shadow-btn)",
+              }}
+              aria-label="Add expense"
+            >
+              <Plus size={22} color="white" strokeWidth={2.5} />
+            </Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <ToastContainer />
     </div>

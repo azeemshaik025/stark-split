@@ -18,6 +18,9 @@ import { toast, ToastContainer } from "@/components/ui/Toast";
 import { AvatarGroup } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
+import Skeleton from "@/components/ui/Skeleton";
+import ConnectButton from "@/components/wallet/ConnectButton";
+import Logo from "@/components/ui/Logo";
 import InviteShare from "@/components/group/InviteShare";
 import type { Group, User, StakingPosition } from "@/types";
 
@@ -53,6 +56,7 @@ export default function PoolPage() {
   const [loading, setLoading] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   const [lastTxHash, setLastTxHash] = useState<string | null>(null);
+  const [isLoadingGroup, setIsLoadingGroup] = useState(true);
   const [livePosition, setLivePosition] = useState<{ rewards: string; staked: string; commissionPercent: number } | null>(null);
 
   const myPosition = positions.find((p) => p.user_id === user?.id);
@@ -97,6 +101,8 @@ export default function PoolPage() {
       } catch (err) {
         console.error(err);
         toast("Failed to load pool", "error");
+      } finally {
+        setIsLoadingGroup(false);
       }
     }
     load();
@@ -222,8 +228,30 @@ export default function PoolPage() {
 
   if (!user) {
     return (
-      <div className="page-content flex items-center justify-center min-h-[40vh]">
-        <p className="text-[var(--text-secondary)]">Connect wallet to view pool</p>
+      <div className="page-content flex flex-col items-center justify-center min-h-[60vh]">
+        <div
+          className="w-full max-w-md rounded-2xl p-8 sm:p-10 text-center relative overflow-hidden"
+          style={{
+            background: "var(--bg-surface)",
+            border: "1px solid var(--border-subtle)",
+            boxShadow: "var(--shadow-card)",
+          }}
+        >
+          <div
+            className="absolute top-0 left-0 right-0 h-1"
+            style={{ background: "var(--accent-gradient)" }}
+          />
+          <div className="flex justify-center mb-6">
+            <Logo href={null} size="xl" showText={false} />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight mb-2 text-[var(--text-primary)]">
+            Connect to view pool
+          </h2>
+          <p className="text-[var(--text-secondary)] text-sm sm:text-base max-w-[320px] mx-auto leading-relaxed mb-8">
+            Sign in to view this pool&apos;s staking positions and contribute STRK.
+          </p>
+          <ConnectButton prominent />
+        </div>
       </div>
     );
   }
@@ -233,7 +261,7 @@ export default function PoolPage() {
       <div className="mb-6">
         <div className="flex justify-between items-center mb-6">
           <button
-            onClick={() => router.push("/yield")}
+            onClick={() => router.push("/pools")}
             className="btn btn-ghost btn-sm p-2 rounded-lg"
           >
             <ArrowLeft size={20} />
@@ -260,13 +288,19 @@ export default function PoolPage() {
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)] mb-1.5">
-              {group?.name ?? "Loading..."}
+              {isLoadingGroup ? <Skeleton width={160} height={24} rounded /> : (group?.name ?? "Pool")}
             </h1>
             <div className="flex items-center gap-2">
-              <AvatarGroup users={members} size={24} max={5} />
-              <span className="text-xs text-[var(--text-tertiary)]">
-                {members.length} member{members.length !== 1 ? "s" : ""}
-              </span>
+              {isLoadingGroup ? (
+                <Skeleton width={100} height={16} rounded />
+              ) : (
+                <>
+                  <AvatarGroup users={members} size={24} max={5} />
+                  <span className="text-xs text-[var(--text-tertiary)]">
+                    {members.length} member{members.length !== 1 ? "s" : ""}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -1,8 +1,9 @@
 "use client";
 
-import { guessCategory, CUSTOM_TOKEN_SYMBOL, CUSTOM_TOKEN_DISPLAY_DECIMALS, STRK_DISPLAY_DECIMALS } from "@/lib/constants";
-import { formatDate, truncateAddress, formatAmount } from "@/lib/utils";
-import type { Expense, User } from "@/types";
+import { motion } from "framer-motion";
+import { CUSTOM_TOKEN_DISPLAY_DECIMALS, CUSTOM_TOKEN_SYMBOL, guessCategory, STRK_DISPLAY_DECIMALS } from "@/lib/constants";
+import { formatAmount, formatDate, truncateAddress } from "@/lib/utils";
+import type { Expense } from "@/types";
 
 interface ExpenseItemProps {
   expense: Expense;
@@ -48,9 +49,12 @@ export default function ExpenseItem({ expense, currentUserId, memberCount = 1, c
   const sym = currency ?? expense.currency ?? CUSTOM_TOKEN_SYMBOL;
 
   return (
-    <div
+    <motion.div
       className="flex items-center gap-3 py-3 border-b last:border-0"
       style={{ borderColor: "var(--border-subtle)" }}
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
       <div
         className="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
@@ -90,6 +94,6 @@ export default function ExpenseItem({ expense, currentUserId, memberCount = 1, c
         </div>
         <div className="text-[10px] text-[var(--text-tertiary)] mt-0.5">{sym}</div>
       </div>
-    </div>
+    </motion.div>
   );
 }

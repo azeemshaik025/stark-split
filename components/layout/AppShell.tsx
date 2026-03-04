@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   TrendingUp,
@@ -14,7 +15,7 @@ import WalletRestorer from "@/components/wallet/WalletRestorer";
 
 const NAV_ITEMS = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Splits" },
-  { href: "/yield", icon: TrendingUp, label: "Pools" },
+  { href: "/pools", icon: TrendingUp, label: "Pools" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
@@ -32,7 +33,7 @@ function SidebarNavItem({
   const isActive = pathname === href || pathname.startsWith(href + "/");
 
   // Use cyan accent color for Pools, purple for Splits
-  const activeColor = href === "/yield" ? "var(--accent)" : "var(--primary)";
+  const activeColor = href === "/pools" ? "var(--accent)" : "var(--primary)";
 
   return (
     <Link
@@ -69,19 +70,26 @@ function SidebarNavItem({
         }
       }}
     >
-      {isActive && (
-        <span
-          style={{
-            position: "absolute",
-            left: 0,
-            top: "25%",
-            bottom: "25%",
-            width: 2.5,
-            borderRadius: "0 2px 2px 0",
-            background: activeColor,
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {isActive && (
+          <motion.span
+            layoutId="sidebar-active-indicator"
+            style={{
+              position: "absolute",
+              left: 0,
+              top: "25%",
+              bottom: "25%",
+              width: 2.5,
+              borderRadius: "0 2px 2px 0",
+              background: activeColor,
+            }}
+            initial={{ opacity: 0, scaleY: 0.5 }}
+            animate={{ opacity: 1, scaleY: 1 }}
+            exit={{ opacity: 0, scaleY: 0.5 }}
+            transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+          />
+        )}
+      </AnimatePresence>
       <Icon
         size={18}
         strokeWidth={isActive ? 2 : 1.5}
@@ -104,7 +112,7 @@ function Sidebar() {
         transition: "background-color 0.25s ease, border-color 0.25s ease",
       }}
     >
-      <div className="mb-8 px-1">
+      <div className="pb-5 mb-5 px-1" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
         <Logo href="/" size="md" />
       </div>
 
@@ -170,7 +178,7 @@ function MobileBottomNav() {
       {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
         const isActive = pathname === href || pathname.startsWith(href + "/");
         // Use cyan for Pools, purple for Splits and Settings
-        const activeColor = href === "/yield" ? "var(--accent)" : "var(--primary)";
+        const activeColor = href === "/pools" ? "var(--accent)" : "var(--primary)";
         return (
           <Link
             key={href}
@@ -200,7 +208,18 @@ function MobileBottomNav() {
             >
               {label.split(" ")[0]}
             </span>
-            {isActive && <div className="mobile-nav-active-dot" />}
+            <AnimatePresence>
+              {isActive && (
+                <motion.div
+                  className="mobile-nav-active-dot"
+                  layoutId="mobile-nav-active-dot"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 22 }}
+                />
+              )}
+            </AnimatePresence>
           </Link>
         );
       })}

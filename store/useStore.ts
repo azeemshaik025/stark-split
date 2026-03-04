@@ -56,6 +56,8 @@ interface AppState {
   // UI State
   isLoadingGroups: boolean;
   isLoadingExpenses: boolean;
+  isLoadingBalances: boolean;
+  isLoadingPools: boolean;
 
   // Actions — Auth
   connectWallet: () => Promise<void>;
@@ -112,6 +114,8 @@ export const useStore = create<AppState>()(
       walletBalances: { strk: "0", customToken: "0" },
       isLoadingGroups: false,
       isLoadingExpenses: false,
+      isLoadingBalances: false,
+      isLoadingPools: false,
 
       // ==========================================
       // AUTH
@@ -161,6 +165,8 @@ export const useStore = create<AppState>()(
           groupMembers: {},
           groupDebts: {},
           walletBalances: { strk: "0", customToken: "0" },
+          isLoadingBalances: false,
+          isLoadingPools: false,
         });
       },
 
@@ -233,11 +239,13 @@ export const useStore = create<AppState>()(
         const { user } = get();
         if (!user) return;
 
+        set({ isLoadingPools: true });
         try {
           const poolGroups = await getUserPoolGroups(user.id);
-          set({ poolGroups: poolGroups.flat() as unknown as Group[] });
+          set({ poolGroups: poolGroups.flat() as unknown as Group[], isLoadingPools: false });
         } catch (err) {
           console.error("Failed to fetch pool groups:", err);
+          set({ isLoadingPools: false });
         }
       },
 
@@ -515,11 +523,13 @@ export const useStore = create<AppState>()(
         const { walletAddress } = get();
         if (!walletAddress) return;
 
+        set({ isLoadingBalances: true });
         try {
           const balances = await fetchBalancesByAddress(walletAddress);
-          set({ walletBalances: balances });
+          set({ walletBalances: balances, isLoadingBalances: false });
         } catch (err) {
           console.error("Failed to refresh balances:", err);
+          set({ isLoadingBalances: false });
         }
       },
 

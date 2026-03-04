@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { Wallet, ChevronDown, LogOut, Copy, Check } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { truncateAddress, copyToClipboard } from "@/lib/utils";
@@ -16,6 +18,7 @@ interface ConnectButtonProps {
 }
 
 export default function ConnectButton({ compact = false, dropdownUp = false, prominent = false }: ConnectButtonProps) {
+  const router = useRouter();
   const { wallet, walletAddress, user, isConnecting, connectionError, connectWallet, disconnectWallet } =
     useStore();
 
@@ -59,7 +62,7 @@ export default function ConnectButton({ compact = false, dropdownUp = false, pro
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
         <button
-          className={prominent ? "btn btn-primary btn-lg" : "btn btn-primary btn-sm"}
+          className={`${prominent ? "btn btn-primary btn-lg" : "btn btn-primary btn-sm"}${prominent && !isConnecting ? " animate-glow-pulse" : ""}`}
           onClick={() => connectWallet()}
           disabled={isConnecting}
           style={{ gap: 8, minWidth: compact ? "auto" : prominent ? 200 : 140 }}
@@ -176,27 +179,31 @@ export default function ConnectButton({ compact = false, dropdownUp = false, pro
       </button>
 
       {/* Dropdown menu — rendered in portal to avoid overflow clipping */}
-      {menuOpen &&
-        typeof document !== "undefined" &&
+      {typeof document !== "undefined" &&
         createPortal(
-          <>
-            <div
-              style={{ position: "fixed", inset: 0, zIndex: 98 }}
-              onClick={() => setMenuOpen(false)}
-              aria-hidden="true"
-            />
-            <div
-              style={{
-                ...dropdownStyle,
-                zIndex: 99,
-                background: "var(--bg-elevated)",
-                border: "1px solid var(--border-default)",
-                borderRadius: 14,
-                boxShadow: "var(--shadow-modal)",
-                padding: 8,
-                animation: "fadeInUp 0.15s ease",
-              }}
-            >
+          <AnimatePresence>
+            {menuOpen && (
+              <>
+                <div
+                  style={{ position: "fixed", inset: 0, zIndex: 98 }}
+                  onClick={() => setMenuOpen(false)}
+                  aria-hidden="true"
+                />
+                <motion.div
+                  style={{
+                    ...dropdownStyle,
+                    zIndex: 99,
+                    background: "var(--bg-elevated)",
+                    border: "1px solid var(--border-default)",
+                    borderRadius: 14,
+                    boxShadow: "var(--shadow-modal)",
+                    padding: 8,
+                  }}
+                  initial={{ opacity: 0, y: dropdownUp ? 6 : -6, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: dropdownUp ? 6 : -6, scale: 0.96 }}
+                  transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
             {/* Wallet address header */}
             <div
               style={{
@@ -248,7 +255,7 @@ export default function ConnectButton({ compact = false, dropdownUp = false, pro
             <button
               onClick={() => {
                 setMenuOpen(false);
-                window.location.href = "/settings";
+                router.push("/settings");
               }}
               style={{
                 display: "flex",
@@ -287,7 +294,7 @@ export default function ConnectButton({ compact = false, dropdownUp = false, pro
               onClick={() => {
                 setMenuOpen(false);
                 disconnectWallet();
-                window.location.href = "/";
+                router.push("/");
               }}
               style={{
                 display: "flex",
@@ -317,10 +324,12 @@ export default function ConnectButton({ compact = false, dropdownUp = false, pro
               <LogOut size={15} />
               Disconnect
             </button>
-          </div>
-        </>,
-        document.body
-      )}
+          </motion.div>
+              </>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
     </div>
   );
 }

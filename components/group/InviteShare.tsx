@@ -16,7 +16,8 @@ export default function InviteShare({
   groupName,
   variant = "button",
 }: InviteShareProps) {
-  const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -25,8 +26,8 @@ export default function InviteShare({
   async function handleShare() {
     try {
       await shareInviteLink(inviteCode, groupName);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
       setShowModal(false);
       setShowDropdown(false);
     } catch (err) {
@@ -38,8 +39,8 @@ export default function InviteShare({
   async function handleCopyLink() {
     try {
       await copyToClipboard(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
     } catch {
       // ignore
     }
@@ -48,8 +49,8 @@ export default function InviteShare({
   async function handleCopyCode() {
     try {
       await copyToClipboard(inviteCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
     } catch {
       // ignore
     }
@@ -108,12 +109,12 @@ export default function InviteShare({
           Share
         </Button>
         <Button variant="secondary" onClick={handleCopyLink} style={{ gap: 6, flex: "1 1 0", minWidth: 100 }}>
-          {copied ? <Check size={16} /> : <Copy size={16} />}
-          {copied ? "Copied!" : "Copy link"}
+          {copiedLink ? <Check size={16} /> : <Copy size={16} />}
+          {copiedLink ? "Copied!" : "Copy link"}
         </Button>
         <Button variant="ghost" onClick={handleCopyCode} style={{ gap: 6, flex: "1 1 0", minWidth: 100 }}>
-          {copied ? <Check size={16} /> : <Link2 size={16} />}
-          Copy code
+          {copiedCode ? <Check size={16} /> : <Link2 size={16} />}
+          {copiedCode ? "Copied!" : "Copy code"}
         </Button>
       </div>
     </div>
@@ -176,8 +177,8 @@ export default function InviteShare({
           className="btn btn-secondary btn-sm"
           style={{ gap: 6 }}
         >
-          {copied ? <Check size={14} /> : <Share2 size={14} />}
-          {copied ? "Copied!" : "Invite"}
+          {copiedLink ? <Check size={14} /> : <Share2 size={14} />}
+          {copiedLink ? "Copied!" : "Invite"}
         </button>
         {showDropdown && (
           <>
@@ -212,8 +213,8 @@ export default function InviteShare({
       className="btn btn-secondary btn-sm"
       style={{ gap: 6 }}
     >
-      {copied ? <Check size={14} /> : <Share2 size={14} />}
-      {copied ? "Copied!" : "Invite"}
+      {copiedLink ? <Check size={14} /> : <Share2 size={14} />}
+      {copiedLink ? "Copied!" : "Invite"}
     </button>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, CheckCircle, Zap } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
@@ -35,13 +36,23 @@ export default function DebtSummary({
 }: DebtSummaryProps) {
   if (debts.length === 0) {
     return (
-      <div className="text-center py-14 px-6">
-        <div className="w-14 h-14 rounded-full bg-[rgba(0,230,118,0.1)] flex items-center justify-center mx-auto mb-4">
+      <motion.div
+        className="text-center py-14 px-6"
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
+        <motion.div
+          className="w-14 h-14 rounded-full bg-[rgba(0,230,118,0.1)] flex items-center justify-center mx-auto mb-4"
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.05 }}
+        >
           <CheckCircle size={28} color="var(--accent-green)" />
-        </div>
+        </motion.div>
         <h3 className="text-lg font-bold mb-2">All settled up!</h3>
         <p className="text-sm text-[var(--text-secondary)]">No outstanding debts in this group.</p>
-      </div>
+      </motion.div>
     );
   }
 
@@ -51,7 +62,7 @@ export default function DebtSummary({
     (d) => d.from !== currentUserId && d.to !== currentUserId
   );
 
-  function DebtRow({ debt, highlight }: { debt: Debt; highlight?: "owe" | "owed" }) {
+  function DebtRow({ debt, highlight, index = 0 }: { debt: Debt; highlight?: "owe" | "owed"; index?: number }) {
     const fromName = getMemberDisplayName(debt.from_user ?? null, debt.from);
     const toName = getMemberDisplayName(debt.to_user ?? null, debt.to);
 
@@ -59,8 +70,11 @@ export default function DebtSummary({
     const isOwedToYou = debt.to === currentUserId;
 
     return (
-      <div
+      <motion.div
         className={`debt-row ${isYouOwe ? "debt-row-owe" : isOwedToYou ? "debt-row-owed" : "debt-row-other"}`}
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, delay: index * 0.03, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         <Avatar user={debt.from_user ?? { id: debt.from }} size={32} />
         <div className="flex-1 text-body-sm text-[var(--text-secondary)]">
@@ -97,18 +111,20 @@ export default function DebtSummary({
           </span>
 
           {isYouOwe && onSettle && (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => onSettle(debt)}
-              style={{ padding: "6px 14px", fontSize: "0.75rem", gap: 4 }}
-            >
-              {NETWORK === "mainnet" ? <Zap size={12} /> : null}
-              Pay
-            </Button>
+            <motion.div whileHover={{ scale: 1.02, transition: { duration: 0.15 } }} whileTap={{ scale: 0.97 }}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => onSettle(debt)}
+                style={{ padding: "6px 14px", fontSize: "0.75rem", gap: 4 }}
+              >
+                {NETWORK === "mainnet" ? <Zap size={12} /> : null}
+                Pay
+              </Button>
+            </motion.div>
           )}
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -119,8 +135,8 @@ export default function DebtSummary({
           <p className="text-label mb-2.5" style={{ color: "var(--error)" }}>
             You owe
           </p>
-          {myDebts.map((d) => (
-            <DebtRow key={`${d.from}-${d.to}`} debt={d} highlight="owe" />
+          {myDebts.map((d, i) => (
+            <DebtRow key={`${d.from}-${d.to}`} debt={d} highlight="owe" index={i} />
           ))}
         </div>
       )}
@@ -130,8 +146,8 @@ export default function DebtSummary({
           <p className="text-label mb-2.5" style={{ color: "var(--accent-green)" }}>
             Owed to you
           </p>
-          {owedToMe.map((d) => (
-            <DebtRow key={`${d.from}-${d.to}`} debt={d} highlight="owed" />
+          {owedToMe.map((d, i) => (
+            <DebtRow key={`${d.from}-${d.to}`} debt={d} highlight="owed" index={i} />
           ))}
         </div>
       )}
@@ -141,8 +157,8 @@ export default function DebtSummary({
           <p className="text-label mb-2.5">
             Other debts
           </p>
-          {otherDebts.map((d) => (
-            <DebtRow key={`${d.from}-${d.to}`} debt={d} />
+          {otherDebts.map((d, i) => (
+            <DebtRow key={`${d.from}-${d.to}`} debt={d} index={i} />
           ))}
         </div>
       )}

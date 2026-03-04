@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import { X, UserPlus, ClipboardPaste } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import Button from "@/components/ui/Button";
@@ -92,8 +93,11 @@ export default function GroupModal({ mode, groupType = "split", onClose, onSucce
       style={{ background: "var(--bg-modal)", backdropFilter: "blur(12px)" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div
-        className="w-full max-w-md rounded-2xl p-6 sm:p-8 relative overflow-hidden animate-scale-in"
+      <motion.div
+        className="w-full max-w-md rounded-2xl p-6 sm:p-8 relative overflow-hidden"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
         style={{
           background: "var(--bg-elevated)",
           border: "1px solid var(--border-default)",
@@ -108,10 +112,10 @@ export default function GroupModal({ mode, groupType = "split", onClose, onSucce
           <h2 className="text-base font-bold text-[var(--text-primary)]">
             {mode === "create"
               ? groupType === "pool"
-                ? "Create a treasury"
+                ? "Create a Pool"
                 : "Create a group"
               : groupType === "pool"
-                ? "Join a treasury"
+                ? "Join a Pool"
                 : "Join a group"}
           </h2>
           <button onClick={onClose} className="btn btn-ghost btn-sm p-2 rounded-lg">
@@ -166,7 +170,7 @@ export default function GroupModal({ mode, groupType = "split", onClose, onSucce
             </div>
             <p className="text-sm text-[var(--text-secondary)] mb-4 font-medium">
               {groupType === "pool"
-                ? "Enter the invite code for the treasury pool"
+                ? "Enter the invite code for the pool"
                 : "Enter the invite code from your friend or paste the invite link"}
             </p>
             <div className="relative">
@@ -216,14 +220,14 @@ export default function GroupModal({ mode, groupType = "split", onClose, onSucce
           >
             {mode === "create"
               ? groupType === "pool"
-                ? "Create Treasury"
+                ? "Create Pool"
                 : "Create Group"
               : groupType === "pool"
-                ? "Join Treasury"
+                ? "Join Pool"
                 : "Join Group"}
           </Button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

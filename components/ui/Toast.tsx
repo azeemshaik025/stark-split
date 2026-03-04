@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, XCircle, AlertCircle, Info, X } from "lucide-react";
 
 export type ToastType = "success" | "error" | "warning" | "info";
@@ -61,8 +62,6 @@ export function ToastContainer() {
     info: "rgba(59, 130, 246, 0.2)",
   };
 
-  if (toasts.length === 0) return null;
-
   return (
     <div
       style={{
@@ -74,51 +73,58 @@ export function ToastContainer() {
         flexDirection: "column",
         gap: 8,
         maxWidth: 360,
+        pointerEvents: toasts.length === 0 ? "none" : "auto",
       }}
     >
-      {toasts.map((t) => (
-        <div
-          key={t.id}
-          className="animate-fade-in-up"
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 10,
-            padding: "12px 16px",
-            borderRadius: 12,
-            background: colors[t.type],
-            border: `1px solid ${borderColors[t.type]}`,
-            backdropFilter: "blur(12px)",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-          }}
-        >
-          <span style={{ flexShrink: 0, marginTop: 1 }}>{icons[t.type]}</span>
-          <span
+      <AnimatePresence mode="popLayout">
+        {toasts.map((t) => (
+          <motion.div
+            key={t.id}
+            layout
+            initial={{ opacity: 0, y: -8, scale: 0.95, x: 20 }}
+            animate={{ opacity: 1, y: 0, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.92, x: 20 }}
+            transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
             style={{
-              fontSize: "0.875rem",
-              color: "var(--text-primary)",
-              flex: 1,
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+              padding: "12px 16px",
+              borderRadius: 12,
+              background: colors[t.type],
+              border: `1px solid ${borderColors[t.type]}`,
+              backdropFilter: "blur(12px)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
             }}
           >
-            {t.message}
-          </span>
-          <button
-            onClick={() =>
-              setToasts((prev) => prev.filter((x) => x.id !== t.id))
-            }
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "var(--text-secondary)",
-              padding: 0,
-              flexShrink: 0,
-            }}
-          >
-            <X size={14} />
-          </button>
-        </div>
-      ))}
+            <span style={{ flexShrink: 0, marginTop: 1 }}>{icons[t.type]}</span>
+            <span
+              style={{
+                fontSize: "0.875rem",
+                color: "var(--text-primary)",
+                flex: 1,
+              }}
+            >
+              {t.message}
+            </span>
+            <button
+              onClick={() =>
+                setToasts((prev) => prev.filter((x) => x.id !== t.id))
+              }
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--text-secondary)",
+                padding: 0,
+                flexShrink: 0,
+              }}
+            >
+              <X size={14} />
+            </button>
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   );
 }
