@@ -56,6 +56,32 @@ Without these funds, you won't be able to create expenses, settle, or use pools.
 
 ---
 
+## Starkzap Ecosystem Contribution
+
+While building StarkSplit, we encountered a real developer pain point in the Starkzap SDK and contributed back to the ecosystem:
+
+### Issue [#49](https://github.com/keep-starknet-strange/starkzap/issues/49): Standardize Gas Sponsorship Fallback Pattern
+
+**Filed by us** — When `feeMode: "sponsored"` fails (e.g., custom tokens on testnet not in the paymaster allowlist), developers are forced to manually parse error strings and implement ad-hoc retry logic. This is fragile and breaks across SDK updates.
+
+**We proposed:**
+1. A structured `SponsorshipNotAvailableError` with a `reason` field (not whitelisted, policy exceeded, network unavailable)
+2. An automatic fallback mechanism (`fallbackTo: "user_pays"` + `onFallback` callback)
+3. Clear documentation for testnet and custom token scenarios
+
+### PR [#54](https://github.com/keep-starknet-strange/starkzap/pull/54): Implementation in progress
+
+A community contributor picked up our issue and submitted a PR that implements **exactly** what we proposed:
+- `SponsorshipNotAvailableError` with normalized reasons across AVNU and Cartridge providers
+- `fallbackTo` and `onFallback` options on `ExecuteOptions`
+- Utility functions: `isSponsorshipError()`, `toFriendlyMessage()`
+- New subpath import: `starkzap/sponsorship`
+- **Zero breaking changes** — purely additive
+
+> This issue came directly from building StarkSplit's gasless settlement flow. We hit the problem, designed the solution, and the SDK is now being improved because of it.
+
+---
+
 ## Architecture
 
 ```
@@ -501,18 +527,6 @@ npm run start
 ### 🚀 Startup Expense Reimbursement
 
 10 remote employees floating ~$500/month each in expenses. The $5,000 monthly float earns ~$300/year in yield on money that's already committed. Gasless settlements eliminate the friction of manual reimbursement requests.
-
----
-
-## Starkzap Issues
-
-During development of StarkSplit, we identified key enhancement opportunities in the Starkzap SDK:
-
-### Issue #49: Gas Sponsorship Fallback Standardization
-
-- **Status:** ✅ Already filed by community
-- **Link:** [github.com/keep-starknet-strange/starkzap/issues/49](https://github.com/keep-starknet-strange/starkzap/issues/49)
-- **Context:** When `feeMode: "sponsored"` fails on testnet, there's no standard error handling pattern. This affects all custom token integrations.
 
 ---
 
