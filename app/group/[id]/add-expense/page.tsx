@@ -47,7 +47,7 @@ export default function AddExpensePage() {
     if (!groupMembers[groupId]) {
       fetchGroupDetails(groupId);
     }
-  }, [groupId]);
+  }, [groupId, groupMembers, fetchGroupDetails]);
 
   useEffect(() => {
     if (user && !paidBy) {

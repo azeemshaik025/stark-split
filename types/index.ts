@@ -16,10 +16,9 @@ export interface Group {
   emoji: string;
   created_by: string;
   invite_code: string;
-  type: 'split' | 'pool'; // Discriminator: splits use custom token, pools use STRK
+  type: "split" | "pool"; // Discriminator: splits use custom token, pools use STRK
   total_staked: number;
   total_yield_earned: number;
-  pool_liquid?: number; // STRK in pool available for settlements
   created_at: string;
   // Joined relations
   members?: GroupMember[];
@@ -88,7 +87,7 @@ export interface StakingPosition {
 
 export interface Debt {
   from: string; // user_id
-  to: string;   // user_id
+  to: string; // user_id
   amount: number;
   // enriched
   from_user?: User;
@@ -113,7 +112,10 @@ export interface WalletInstance {
   address: string;
   balanceOf: (token: unknown) => Promise<{ toFormatted: () => string }>;
   transfer: (token: unknown, recipients: unknown[]) => Promise<TxResult>;
-  execute: (calls: unknown[], options?: { feeMode?: string }) => Promise<TxResult>;
+  execute: (
+    calls: unknown[],
+    options?: { feeMode?: string },
+  ) => Promise<TxResult>;
   tx: () => TxBuilder;
 }
 
@@ -121,7 +123,7 @@ export interface TxResult {
   wait: () => Promise<void>;
   watch: (
     cb: (status: { finality: string; execution: string }) => void,
-    options?: { pollIntervalMs?: number; timeoutMs?: number }
+    options?: { pollIntervalMs?: number; timeoutMs?: number },
   ) => () => void;
 }
 

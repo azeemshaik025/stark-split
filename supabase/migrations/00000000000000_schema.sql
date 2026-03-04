@@ -20,7 +20,6 @@ CREATE TABLE groups (
   type TEXT NOT NULL DEFAULT 'split' CHECK (type IN ('split', 'pool')),
   total_staked NUMERIC DEFAULT 0,
   total_yield_earned NUMERIC DEFAULT 0,
-  pool_liquid NUMERIC DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -54,7 +53,6 @@ CREATE TABLE settlements (
   amount NUMERIC NOT NULL,
   tx_hash TEXT,
   status TEXT DEFAULT 'pending',
-  from_treasury BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

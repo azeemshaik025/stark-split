@@ -29,7 +29,7 @@ export default function YieldPage() {
 
   useEffect(() => {
     if (walletAddress && user) fetchPoolGroups();
-  }, [walletAddress, user]);
+  }, [walletAddress, user, fetchPoolGroups]);
 
   function handleGroupSuccess(group: Group) {
     setModal(null);

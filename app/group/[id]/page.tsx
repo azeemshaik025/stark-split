@@ -141,7 +141,7 @@ export default function GroupPage() {
 
   useEffect(() => {
     fetchGroupDetails(groupId);
-  }, [groupId]);
+  }, [groupId, fetchGroupDetails]);
 
   async function handleSettleDebt(debt: Debt) {
     const toUser = members.find((m) => m.id === debt.to);

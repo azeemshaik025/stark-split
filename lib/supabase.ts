@@ -70,7 +70,7 @@ export async function getUserGroups(userId: string) {
     .select(`
       group_id,
       groups (
-        id, name, emoji, invite_code, type, total_staked, total_yield_earned, pool_liquid, created_at,
+        id, name, emoji, invite_code, type, total_staked, total_yield_earned, created_at,
         created_by
       )
     `)
@@ -89,7 +89,7 @@ export async function getUserPoolGroups(userId: string) {
     .select(`
       group_id,
       groups (
-        id, name, emoji, invite_code, type, total_staked, total_yield_earned, pool_liquid, created_at,
+        id, name, emoji, invite_code, type, total_staked, total_yield_earned, created_at,
         created_by
       )
     `)
@@ -269,8 +269,7 @@ export async function createSettlement(
   fromUser: string,
   toUser: string,
   amount: number,
-  txHash?: string,
-  fromTreasury?: boolean
+  txHash?: string
 ) {
   const { data, error } = await supabase
     .from("settlements")
@@ -281,7 +280,6 @@ export async function createSettlement(
       amount,
       tx_hash: txHash ?? null,
       status: "pending",
-      from_treasury: fromTreasury ?? false,
     })
     .select()
     .single();
@@ -343,20 +341,6 @@ export async function addPoolContribution(
     .single();
 
   if (error) throw error;
-
-  // Update group pool_liquid
-  const { data: group } = await supabase
-    .from("groups")
-    .select("pool_liquid")
-    .eq("id", groupId)
-    .single();
-
-  const currentLiquid = Number(group?.pool_liquid ?? 0);
-  await supabase
-    .from("groups")
-    .update({ pool_liquid: currentLiquid + amount })
-    .eq("id", groupId);
-
   return data;
 }
 

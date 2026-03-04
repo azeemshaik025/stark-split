@@ -122,10 +122,7 @@ export const useStore = create<AppState>()(
           const wallet = await sdkConnectWallet();
           const address = wallet.address;
 
-          // Wallet connected — set immediately so UI updates
-          set({ wallet, walletAddress: address, isConnecting: false });
-
-          // Upsert user in Supabase — required for groups/expenses (created_by FK)
+          // Upsert user in Supabase BEFORE updating UI state — required for groups/expenses (created_by FK)
           const user = await upsertUser(address);
 
           // Get balance via independent RPC fetcher (no wallet object needed)
@@ -134,12 +131,17 @@ export const useStore = create<AppState>()(
             customToken: "0",
           }));
 
-          set({ user, walletBalances: balances });
+          // Only update state after all critical operations succeed
+          set({ wallet, walletAddress: address, user, walletBalances: balances, isConnecting: false });
 
           // Fetch groups
           await get().fetchGroups();
         } catch (err) {
+          // Clean up any partial state so UI doesn't show a broken connected state
           set({
+            wallet: null,
+            walletAddress: null,
+            user: null,
             isConnecting: false,
             connectionError: getSdkErrorMessage(err),
           });
@@ -266,10 +268,25 @@ export const useStore = create<AppState>()(
 
       createGroup: async (name: string, emoji: string) => {
         const { user, walletAddress } = get();
-        if (!user || !walletAddress) return null;
+        if (!walletAddress) {
+          toast("Please connect your wallet first", "error");
+          return null;
+        }
+        // If user is null (e.g. DB upsert failed during connect), try to recover
+        let currentUser = user;
+        if (!currentUser) {
+          try {
+            currentUser = await upsertUser(walletAddress);
+            set({ user: currentUser });
+          } catch {
+            toast("Session expired — please reconnect your wallet", "error");
+            return null;
+          }
+        }
+        if (!currentUser) return null;
 
         try {
-          const group = await dbCreateGroup(name, emoji, user.id, "split");
+          const group = await dbCreateGroup(name, emoji, currentUser.id, "split");
           set((state) => ({ groups: [...state.groups, group as Group] }));
           return group as Group;
         } catch (err: unknown) {
@@ -285,20 +302,36 @@ export const useStore = create<AppState>()(
               return group as Group;
             } catch (retryErr) {
               console.error("Failed to create group (retry):", retryErr);
+              toast("Failed to create group — please try again", "error");
               return null;
             }
           }
           console.error("Failed to create group:", err);
+          toast("Failed to create group — please try again", "error");
           return null;
         }
       },
 
       createPoolGroup: async (name: string, emoji: string) => {
         const { user, walletAddress } = get();
-        if (!user || !walletAddress) return null;
+        if (!walletAddress) {
+          toast("Please connect your wallet first", "error");
+          return null;
+        }
+        let currentUser = user;
+        if (!currentUser) {
+          try {
+            currentUser = await upsertUser(walletAddress);
+            set({ user: currentUser });
+          } catch {
+            toast("Session expired — please reconnect your wallet", "error");
+            return null;
+          }
+        }
+        if (!currentUser) return null;
 
         try {
-          const group = await dbCreateGroup(name, emoji, user.id, "pool");
+          const group = await dbCreateGroup(name, emoji, currentUser.id, "pool");
           set((state) => ({ poolGroups: [...state.poolGroups, group as Group] }));
           return group as Group;
         } catch (err: unknown) {
@@ -312,20 +345,35 @@ export const useStore = create<AppState>()(
               set((state) => ({ poolGroups: [...state.poolGroups, group as Group] }));
               return group as Group;
             } catch {
+              toast("Failed to create pool — please try again", "error");
               return null;
             }
           }
           console.error("Failed to create pool group:", err);
+          toast("Failed to create pool — please try again", "error");
           return null;
         }
       },
 
       joinGroup: async (inviteCode: string) => {
-        const { user } = get();
-        if (!user) return null;
+        const { user, walletAddress } = get();
+        let currentUser = user;
+        if (!currentUser && walletAddress) {
+          try {
+            currentUser = await upsertUser(walletAddress);
+            set({ user: currentUser });
+          } catch {
+            toast("Session expired — please reconnect your wallet", "error");
+            return null;
+          }
+        }
+        if (!currentUser) {
+          toast("Please connect your wallet first", "error");
+          return null;
+        }
 
         try {
-          const group = await joinGroupByCode(inviteCode, user.id);
+          const group = await joinGroupByCode(inviteCode, currentUser.id);
           await get().fetchGroups();
           return group as Group;
         } catch (err) {
@@ -335,11 +383,24 @@ export const useStore = create<AppState>()(
       },
 
       joinPoolGroup: async (inviteCode: string) => {
-        const { user } = get();
-        if (!user) return null;
+        const { user, walletAddress } = get();
+        let currentUser = user;
+        if (!currentUser && walletAddress) {
+          try {
+            currentUser = await upsertUser(walletAddress);
+            set({ user: currentUser });
+          } catch {
+            toast("Session expired — please reconnect your wallet", "error");
+            return null;
+          }
+        }
+        if (!currentUser) {
+          toast("Please connect your wallet first", "error");
+          return null;
+        }
 
         try {
-          const group = await joinGroupByCode(inviteCode, user.id, "pool");
+          const group = await joinGroupByCode(inviteCode, currentUser.id, "pool");
           await get().fetchPoolGroups();
           return group as Group;
         } catch (err) {
@@ -436,6 +497,8 @@ export const useStore = create<AppState>()(
 
           await updateSettlementStatus(settlement.id, "confirmed", txHash);
           await get().fetchExpenses(groupId);
+          // Refresh wallet balances after successful settlement
+          get().refreshBalances();
 
           return { settlementId: settlement.id, txHash };
         } catch (err) {
@@ -465,8 +528,12 @@ export const useStore = create<AppState>()(
         if (!walletAddress) return;
 
         try {
-          const user = await getUserByWallet(walletAddress);
-          if (user) set({ user });
+          let user = await getUserByWallet(walletAddress);
+          // If user not found in DB (e.g. after DB cleanup), re-create them
+          if (!user) {
+            user = await upsertUser(walletAddress);
+          }
+          set({ user });
         } catch (err) {
           console.error("Failed to refresh user:", err);
         }

@@ -58,7 +58,7 @@ export default function SettlePage() {
     if (!members.length) {
       fetchGroupDetails(groupId);
     }
-  }, [groupId]);
+  }, [groupId, members.length, fetchGroupDetails]);
 
   const fromUser = members.find((m) => m.id === from);
   const toUser = members.find((m) => m.id === to);

@@ -748,7 +748,107 @@ body {
 }
 
 /* ============================================
-   STAT CARD UTILITIES
+   DASHBOARD — Balance Hero
+   ============================================ */
+.dash-balance-hero {
+  border-radius: var(--radius-xl);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.dash-balance-hero-inner {
+  padding: 20px 24px;
+}
+
+/* ============================================
+   DASHBOARD — Stat Cards (compact 2x2 grid)
+   ============================================ */
+.dash-stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+.dash-stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   DASHBOARD — Yield Banner
+   ============================================ */
+.dash-yield-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  background: linear-gradient(135deg, rgba(6,182,212,0.04), rgba(99,102,241,0.04));
+  border: 1px solid rgba(6,182,212,0.15);
+  position: relative;
+  overflow: hidden;
+}
+.dash-yield-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--accent), var(--primary));
+}
+.dash-yield-banner:hover {
+  border-color: rgba(6,182,212,0.3);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+.dash-yield-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(6,182,212,0.1);
+  border: 1px solid rgba(6,182,212,0.15);
+}
+.dash-balance-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .dash-yield-banner {
+  background: linear-gradient(135deg, rgba(34,211,238,0.05), rgba(129,140,248,0.05));
+  border-color: rgba(34,211,238,0.12);
+}
+[data-theme="dark"] .dash-yield-banner:hover {
+  border-color: rgba(34,211,238,0.25);
+}
+[data-theme="dark"] .dash-yield-icon {
+  background: rgba(34,211,238,0.1);
+  border-color: rgba(34,211,238,0.15);
+}
+
+/* ============================================
+   STAT CARD UTILITIES (legacy — kept for other pages)
    ============================================ */
 .stat-card {
   border-radius: var(--radius-lg);
@@ -759,7 +859,6 @@ body {
   overflow: hidden;
 }
 
-/* Subtle top accent line */
 .stat-card::after {
   content: '';
   position: absolute;
@@ -1196,12 +1295,23 @@ body {
   transition: opacity 0.18s ease;
 }
 .group-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: var(--shadow-card-hover);
 }
 .group-card-owe::before { background: var(--error); opacity: 1; }
 .group-card-owed::before { background: var(--accent-green); opacity: 1; }
 .group-card-settled::before { background: var(--border-default); opacity: 0.5; }
+.group-card-emoji {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  background: var(--bg-interactive);
+}
 
 /* ============================================
    PAGE SECTION — vertical rhythm helper
