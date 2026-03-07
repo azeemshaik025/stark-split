@@ -74,6 +74,7 @@ export default function DebtSummary({
         className={`debt-row ${isYouOwe ? "debt-row-owe" : isOwedToYou ? "debt-row-owed" : "debt-row-other"}`}
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
+        whileHover={{ y: -1, boxShadow: "var(--shadow-sm)" }}
         transition={{ duration: 0.2, delay: index * 0.03, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         <Avatar user={debt.from_user ?? { id: debt.from }} size={32} />
@@ -115,6 +116,7 @@ export default function DebtSummary({
               <Button
                 variant="primary"
                 size="sm"
+                className="btn-gradient"
                 onClick={() => onSettle(debt)}
                 style={{ padding: "6px 14px", fontSize: "0.75rem", gap: 4 }}
               >

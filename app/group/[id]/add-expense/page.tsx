@@ -154,19 +154,29 @@ export default function AddExpensePage() {
     <div className="flex justify-center px-5 py-6 pb-24">
       <div className="w-full max-w-md flex flex-col min-h-[calc(100vh-140px)]">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <motion.div
+          className="flex items-center justify-between mb-6"
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
           <button onClick={() => router.back()} className="btn btn-ghost btn-sm p-2 rounded-lg">
             <ArrowLeft size={20} />
           </button>
           <span className="font-bold text-[var(--text-primary)]">Add Expense</span>
           <div className="w-10" />
-        </div>
+        </motion.div>
 
-        <div className="flex-1 flex flex-col items-center pb-6 relative">
+        <motion.div
+          className="flex-1 flex flex-col items-center pb-6 relative"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
           {/* Background glow */}
           <div
-            className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(108,92,231,0.08) 0%, transparent 70%)" }}
+            className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(108,92,231,0.1) 0%, transparent 70%)" }}
           />
 
           {/* Amount input */}
@@ -481,9 +491,14 @@ export default function AddExpensePage() {
               {splitAmong.size} of {members.length} selected · tap to toggle
             </p>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="mb-8">
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.15 }}
+        >
           <Button
             fullWidth
             size="lg"
@@ -500,7 +515,7 @@ export default function AddExpensePage() {
           >
             Add Expense
           </Button>
-        </div>
+        </motion.div>
       </div>
 
       <ToastContainer />

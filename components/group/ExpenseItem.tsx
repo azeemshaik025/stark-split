@@ -50,20 +50,26 @@ export default function ExpenseItem({ expense, currentUserId, memberCount = 1, c
 
   return (
     <motion.div
-      className="flex items-center gap-3 py-3 border-b last:border-0"
-      style={{ borderColor: "var(--border-subtle)" }}
+      className="flex items-center gap-3.5 px-4 py-3.5 rounded-xl mb-1.5 last:mb-0"
+      style={{
+        background: "var(--bg-surface)",
+        border: `1px solid var(--border-subtle)`,
+        borderLeft: isYou && effectiveAmount > 0 ? "3px solid var(--accent-green)" : undefined,
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+      }}
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+      whileHover={{ y: -1, boxShadow: "var(--shadow-sm)" }}
     >
       <div
-        className="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
+        className="w-11 h-11 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
         style={{ background: "var(--bg-interactive)" }}
       >
         {emoji}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-[var(--text-primary)] truncate text-[0.875rem] leading-tight">{expense.description}</div>
+        <div className="font-semibold text-[var(--text-primary)] truncate text-[0.9rem] leading-tight">{expense.description}</div>
         <div className="text-xs text-[var(--text-tertiary)] mt-1">
           <span style={{ fontWeight: 500, color: "var(--text-secondary)" }}>{isYou ? "You" : paidByName}</span>
           {" paid "}
@@ -76,7 +82,7 @@ export default function ExpenseItem({ expense, currentUserId, memberCount = 1, c
       </div>
       <div className="text-right flex-shrink-0">
         <div
-          className="font-mono-nums font-bold text-[0.875rem]"
+          className="font-mono-nums font-bold text-[0.9375rem]"
           style={{
             color:
               effectiveAmount === 0

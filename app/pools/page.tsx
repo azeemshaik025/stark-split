@@ -92,31 +92,27 @@ export default function PoolsPage() {
   if (!walletAddress) {
     return (
       <div className="page-content flex flex-col items-center justify-center min-h-[60vh]">
-        <div
-          className="w-full max-w-md rounded-2xl p-8 sm:p-10 text-center relative overflow-hidden"
-          style={{
-            background: "var(--bg-surface)",
-            border: "1px solid var(--border-subtle)",
-            boxShadow: "var(--shadow-card)",
-          }}
+        <motion.div
+          className="connect-card w-full max-w-md text-center"
+          initial={{ opacity: 0, scale: 0.96, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          <div
-            className="absolute top-0 left-0 right-0 h-1"
-            style={{ background: "var(--accent-gradient)" }}
-          />
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-7 relative z-10">
             <Logo href={null} size="xl" showText={false} />
           </div>
-          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight mb-2 text-[var(--text-primary)]">
+          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight mb-2.5 text-[var(--text-primary)] relative z-10">
             Connect to view yield
           </h2>
           <p
-            className="text-[var(--text-secondary)] text-sm sm:text-base max-w-[320px] mx-auto leading-relaxed mb-8"
+            className="text-[var(--text-secondary)] text-sm sm:text-base max-w-[320px] mx-auto leading-relaxed mb-8 relative z-10"
           >
             Create or join a group pool to stake STRK and earn ~{ESTIMATED_APR}% APR. All transactions are gasless.
           </p>
-          <ConnectButton prominent />
-        </div>
+          <div className="relative z-10">
+            <ConnectButton prominent />
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -124,14 +120,19 @@ export default function PoolsPage() {
   return (
     <div className="page-content">
       {/* Page header */}
-      <div className="mb-8">
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
         <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)] mb-1">
           Yield Pools
         </h1>
         <p className="text-xs text-[var(--text-tertiary)]">
           Pool STRK with friends and earn staking rewards together
         </p>
-      </div>
+      </motion.div>
 
       {/* Stats — animate the entire grid as one unit for a clean entrance */}
       <motion.div
@@ -215,7 +216,7 @@ export default function PoolsPage() {
       </motion.div>
 
       {/* Pools list header */}
-      <div className="section-header">
+      <motion.div className="section-header" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.15 }}>
         <h2 className="section-title">Your Pools</h2>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={() => setModal("join")}>
@@ -225,7 +226,7 @@ export default function PoolsPage() {
             <Plus size={14} /> New Pool
           </Button>
         </div>
-      </div>
+      </motion.div>
 
       <AnimatePresence mode="wait">
         {isLoadingPools ? (

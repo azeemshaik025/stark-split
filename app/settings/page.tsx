@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { LogOut, Copy, Check, Droplets, ExternalLink, RefreshCw, User, Wallet, Globe, AlertTriangle } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { updateUserProfile } from "@/lib/supabase";
@@ -99,39 +100,33 @@ export default function SettingsPage() {
   if (!walletAddress) {
     return (
       <div className="page-content flex flex-col items-center justify-center min-h-[60vh]">
-        <div
-          className="w-full max-w-md rounded-2xl p-8 sm:p-10 text-center"
-          style={{
-            background: "var(--bg-surface)",
-            border: "1px solid var(--border-subtle)",
-          }}
-        >
-          <div className="text-5xl mb-4">🔐</div>
-          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight mb-2 text-[var(--text-primary)]">
+        <motion.div className="connect-card w-full max-w-md text-center" initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}>
+          <div className="text-5xl mb-5 relative z-10">🔐</div>
+          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight mb-2.5 text-[var(--text-primary)] relative z-10">
             Connect your wallet
           </h2>
-          <p className="text-[var(--text-secondary)] text-sm sm:text-base max-w-[320px] mx-auto leading-relaxed mb-8">
+          <p className="text-[var(--text-secondary)] text-sm sm:text-base max-w-[320px] mx-auto leading-relaxed mb-8 relative z-10">
             Sign in to access your settings.
           </p>
-          <button onClick={() => router.push("/dashboard")} className="btn btn-primary w-full">
+          <button onClick={() => router.push("/dashboard")} className="btn btn-primary w-full relative z-10">
             Go to Dashboard
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
     <div className="page-content" style={{ maxWidth: 640 }}>
-      <div className="mb-8">
+      <motion.div className="mb-8" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}>
         <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)] mb-1">
           Settings
         </h1>
         <p className="text-xs text-[var(--text-tertiary)]">Manage your profile and wallet</p>
-      </div>
+      </motion.div>
 
       {/* Profile card */}
-      <div className="card mb-4">
+      <motion.div className="card mb-4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05 }}>
         <div className="flex items-center gap-2.5 mb-5">
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center"
@@ -172,10 +167,10 @@ export default function SettingsPage() {
         <Button size="sm" loading={saving} onClick={handleSave}>
           Save Changes
         </Button>
-      </div>
+      </motion.div>
 
       {/* Wallet card */}
-      <div className="card mb-4">
+      <motion.div className="card mb-4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
         <div className="flex items-center gap-2.5 mb-5">
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center"
@@ -247,11 +242,11 @@ export default function SettingsPage() {
           <RefreshCw size={13} className={refreshingBalances ? "animate-spin" : ""} />
           {refreshingBalances ? "Refreshing..." : "Refresh balances"}
         </button>
-      </div>
+      </motion.div>
 
       {/* Faucet card (Sepolia only) */}
       {NETWORK !== "mainnet" && (
-        <div className="card mb-4">
+        <motion.div className="card mb-4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
           <div className="flex items-center gap-2.5 mb-5">
             <div
               className="w-7 h-7 rounded-lg flex items-center justify-center"
@@ -299,11 +294,11 @@ export default function SettingsPage() {
               View on Explorer
             </a>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* Network card */}
-      <div className="card mb-4">
+      <motion.div className="card mb-4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
         <div className="flex items-center gap-2.5 mb-4">
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center"
@@ -328,12 +323,15 @@ export default function SettingsPage() {
           </div>
           <span className="badge badge-active">Connected</span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Danger zone */}
-      <div
+      <motion.div
         className="card"
         style={{ borderColor: "rgba(255,71,87,0.2)" }}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.25 }}
       >
         <div className="flex items-center gap-2.5 mb-4">
           <div
@@ -358,7 +356,7 @@ export default function SettingsPage() {
         >
           <LogOut size={16} /> Disconnect Wallet
         </Button>
-      </div>
+      </motion.div>
 
       <ToastContainer />
     </div>

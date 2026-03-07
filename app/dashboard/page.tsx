@@ -17,7 +17,6 @@ import Logo from "@/components/ui/Logo";
 import GroupModal from "@/components/group/GroupModal";
 import type { Group } from "@/types";
 
-// ── Time-aware greeting ───────────────────────────────────
 function getGreeting(): string {
   const hour = new Date().getHours();
   if (hour < 12) return "Good morning";
@@ -25,8 +24,7 @@ function getGreeting(): string {
   return "Good evening";
 }
 
-// ── Group Card ────────────────────────────────────────────
-function GroupCard({ group }: { group: Group }) {
+function GroupCard({ group, index }: { group: Group; index: number }) {
   const { getUserBalance } = useStore();
   const balance = getUserBalance(group.id);
   const router = useRouter();
@@ -38,44 +36,49 @@ function GroupCard({ group }: { group: Group }) {
   const cardClass = balance < 0 ? "group-card-owe" : balance > 0 ? "group-card-owed" : "group-card-settled";
 
   return (
-    <div
-      className={`group-card ${cardClass}`}
-      onClick={() => router.push(`/group/${group.id}`)}
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: Math.min(index * 0.04, 0.16), ease: [0.25, 0.46, 0.45, 0.94] }}
     >
-      <div className="group-card-emoji">
-        {group.emoji}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="font-semibold text-[var(--text-primary)] truncate text-[0.9375rem] leading-tight">{group.name}</div>
-        <div className="text-xs text-[var(--text-tertiary)] mt-0.5">
-          {group.member_count ?? 1} member{(group.member_count ?? 1) !== 1 ? "s" : ""}
+      <div
+        className={`group-card ${cardClass}`}
+        onClick={() => router.push(`/group/${group.id}`)}
+      >
+        <div className="group-card-emoji">
+          {group.emoji}
         </div>
-      </div>
-      <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-        {balance !== 0 ? (
-          <>
-            <span
-              className="font-mono-nums text-sm font-bold"
-              style={{ color: balanceColor }}
-            >
-              {balance > 0 ? "+" : "-"}{formatAmount(Math.abs(balance), decimals)}
-            </span>
-            <span className="text-[10px] font-medium" style={{ color: balanceColor, opacity: 0.7 }}>
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-[var(--text-primary)] truncate text-[0.9375rem] leading-tight">{group.name}</div>
+          <div className="text-xs text-[var(--text-tertiary)] mt-1">
+            {group.member_count ?? 1} member{(group.member_count ?? 1) !== 1 ? "s" : ""}
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+          {balance !== 0 ? (
+            <>
+              <span
+                className="font-mono-nums text-sm font-bold"
+                style={{ color: balanceColor }}
+              >
+                {balance > 0 ? "+" : "-"}{formatAmount(Math.abs(balance), decimals)}
+              </span>
+              <span className="text-[10px] font-medium" style={{ color: balanceColor, opacity: 0.7 }}>
+                {balanceLabel}
+              </span>
+            </>
+          ) : (
+            <span className="text-xs font-medium" style={{ color: "var(--accent-green)", opacity: 0.7 }}>
               {balanceLabel}
             </span>
-          </>
-        ) : (
-          <span className="text-xs font-medium" style={{ color: "var(--accent-green)", opacity: 0.7 }}>
-            {balanceLabel}
-          </span>
-        )}
+          )}
+        </div>
+        <ChevronRight size={16} style={{ color: "var(--text-tertiary)", opacity: 0.4, flexShrink: 0 }} />
       </div>
-      <ChevronRight size={16} style={{ color: "var(--text-tertiary)", opacity: 0.4, flexShrink: 0 }} />
-    </div>
+    </motion.div>
   );
 }
 
-// ── Main ───────────────────────────────────────────────────
 export default function DashboardPage() {
   const router = useRouter();
   const { user, walletAddress, groups, isLoadingGroups, isLoadingBalances, walletBalances, fetchGroups, refreshUser, refreshBalances } = useStore();
@@ -92,9 +95,7 @@ export default function DashboardPage() {
     if (walletAddress && user) fetchGroups();
   }, [walletAddress, user, fetchGroups]);
 
-  // If walletAddress is persisted but user is null, the session is stale — show connect CTA
   const needsReconnect = !!walletAddress && !user;
-
 
   function handleGroupSuccess(group: Group) {
     setModal(null);
@@ -102,7 +103,6 @@ export default function DashboardPage() {
     router.push(`/group/${group.id}`);
   }
 
-  // Select function directly — object selector causes infinite loop (new ref each render)
   const getUserBalance = useStore((s) => s.getUserBalance);
   const totalOwedToYou = groups.reduce((s, g) => {
     const b = getUserBalance(g.id);
@@ -112,56 +112,50 @@ export default function DashboardPage() {
     const b = getUserBalance(g.id);
     return s + (b < 0 ? Math.abs(b) : 0);
   }, 0);
-  // Split groups always use CUSTOM_TOKEN_SYMBOL
   const splitCurrency = CUSTOM_TOKEN_SYMBOL;
-  const splitDecimals = CUSTOM_TOKEN_DISPLAY_DECIMALS; // Split groups use WBTC
+  const splitDecimals = CUSTOM_TOKEN_DISPLAY_DECIMALS;
 
-  // Not connected or stale session — polished connect CTA
   if (!walletAddress || needsReconnect) {
     return (
       <div className="page-content flex flex-col items-center justify-center min-h-[60vh]">
-        <div
-          className="w-full max-w-md rounded-2xl p-8 sm:p-10 text-center relative overflow-hidden"
-          style={{
-            background: "var(--bg-surface)",
-            border: "1px solid var(--border-subtle)",
-            boxShadow: "var(--shadow-card)",
-          }}
+        <motion.div
+          className="connect-card w-full max-w-md text-center"
+          initial={{ opacity: 0, scale: 0.96, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          {/* Subtle gradient accent */}
-          <div
-            className="absolute top-0 left-0 right-0 h-1"
-            style={{ background: "var(--accent-gradient)" }}
-          />
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-7 relative z-10">
             <Logo href={null} size="xl" showText={false} />
           </div>
-          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight mb-2 text-[var(--text-primary)]">
+          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight mb-2.5 text-[var(--text-primary)] relative z-10">
             Connect your wallet
           </h2>
-          <p className="text-[var(--text-secondary)] text-sm sm:text-base max-w-[320px] mx-auto leading-relaxed mb-8">
+          <p className="text-[var(--text-secondary)] text-sm sm:text-base max-w-[320px] mx-auto leading-relaxed mb-8 relative z-10">
             Sign in with Google, Twitter, or passkeys. No wallet app or seed phrases needed — all transactions are gasless.
           </p>
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-5 relative z-10">
             <ConnectButton prominent />
-            <div className="flex flex-wrap justify-center gap-6 pt-2">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 pt-1">
               {[
-                { label: "Gasless", icon: "⚡" },
-                { label: "Social login", icon: "🔐" },
-                { label: "No seed phrase", icon: "✨" },
-              ].map(({ label, icon }) => (
+                { label: "Gasless", icon: Zap, color: "var(--primary)" },
+                { label: "Social login", icon: "shield" as const, color: "var(--accent-green)" },
+                { label: "No seed phrase", icon: "sparkles" as const, color: "var(--warning)" },
+              ].map(({ label, color }) => (
                 <span
                   key={label}
-                  className="flex items-center gap-1.5 text-xs font-medium"
+                  className="flex items-center gap-1.5 text-xs font-semibold"
                   style={{ color: "var(--text-tertiary)" }}
                 >
-                  <span>{icon}</span>
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ background: color }}
+                  />
                   {label}
                 </span>
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -173,10 +167,15 @@ export default function DashboardPage() {
   return (
     <div className="page-content" style={{ maxWidth: 720 }}>
       {/* Header */}
-      <div className="flex justify-between items-center mb-5">
+      <motion.div
+        className="flex justify-between items-center mb-6"
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
         <div>
-          <p className="text-[11px] font-semibold text-[var(--text-tertiary)] mb-0.5 tracking-widest uppercase">{getGreeting()}</p>
-          <div className="flex items-center gap-2">
+          <p className="text-[11px] font-bold text-[var(--text-tertiary)] mb-1 tracking-widest uppercase">{getGreeting()}</p>
+          <div className="flex items-center gap-2.5">
             <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)]">{displayName}</h1>
             <button
               onClick={async () => {
@@ -184,7 +183,7 @@ export default function DashboardPage() {
                 await copyToClipboard(walletAddress);
                 toast("Address copied!", "success");
               }}
-              className="btn btn-ghost btn-sm p-1 rounded-lg"
+              className="btn btn-ghost btn-sm p-1.5 rounded-lg"
               title="Copy address"
             >
               <Copy size={13} color="var(--text-tertiary)" />
@@ -192,19 +191,19 @@ export default function DashboardPage() {
           </div>
         </div>
         <Link href="/settings" className="block rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 focus:ring-offset-[var(--bg-base)]" aria-label="Go to settings">
-          <Avatar user={user} size={38} showBorder={false} />
+          <Avatar user={user} size={40} showBorder={false} />
         </Link>
-      </div>
+      </motion.div>
 
       {/* Net balance hero */}
       <motion.div
         className="dash-balance-hero mb-5"
-        initial={{ opacity: 0, y: 6 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ duration: 0.35, delay: 0.05, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         <div className="dash-balance-hero-inner">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3.5">
             <div
               className="dash-balance-icon"
               style={{
@@ -224,10 +223,10 @@ export default function DashboardPage() {
               )}
             </div>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] mb-0.5">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] mb-1">
                 {isSettled ? "Status" : "Net balance"}
               </p>
-              <div className="flex items-baseline gap-2">
+              <div className="flex items-baseline gap-2.5">
                 <span
                   className="font-mono-nums text-2xl font-extrabold leading-none"
                   style={{
@@ -243,7 +242,7 @@ export default function DashboardPage() {
                     : `${netBalance >= 0 ? "+" : "-"}${formatAmount(Math.abs(netBalance), splitDecimals)}`}
                 </span>
                 {!isSettled && (
-                  <span className="text-xs font-semibold text-[var(--text-tertiary)]">{splitCurrency}</span>
+                  <span className="text-xs font-bold text-[var(--text-tertiary)]">{splitCurrency}</span>
                 )}
               </div>
             </div>
@@ -251,12 +250,12 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* Stats grid — 2x2, animate as one unit */}
+      {/* Stats grid */}
       <motion.div
         className="grid grid-cols-2 gap-3 mb-5"
-        initial={{ opacity: 0, y: 6 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ duration: 0.35, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         {[
           {
@@ -319,7 +318,7 @@ export default function DashboardPage() {
                       key="value"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.25 }}
                     >
                       {stat.value}
                       {stat.currency && (
@@ -336,21 +335,21 @@ export default function DashboardPage() {
 
       {/* Yield banner */}
       <motion.div
-        className="dash-yield-banner mb-6"
+        className="dash-yield-banner mb-7"
         onClick={() => router.push("/pools")}
-        initial={{ opacity: 0, y: 6 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
-        whileHover={{ y: -1, transition: { duration: 0.15 } }}
+        transition={{ duration: 0.3, delay: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+        whileHover={{ y: -2, transition: { duration: 0.2 } }}
         whileTap={{ scale: 0.99 }}
       >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="flex items-center gap-3.5 flex-1 min-w-0">
           <div className="dash-yield-icon">
             <TrendingUp size={16} color="var(--accent)" strokeWidth={2.5} />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-[var(--text-primary)] leading-tight">
-              Earn <span style={{ color: "var(--accent)" }}>~{ESTIMATED_APR}% APR</span> on STRK
+              Earn <span className="font-mono-nums" style={{ color: "var(--accent)" }}>~{ESTIMATED_APR}%</span> APR on STRK
             </p>
             <p className="text-[11px] text-[var(--text-tertiary)] mt-0.5 truncate">Pool STRK with friends and earn staking yield</p>
           </div>
@@ -359,7 +358,12 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* Groups section */}
-      <div className="section-header">
+      <motion.div
+        className="section-header"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.22 }}
+      >
         <h2 className="section-title">Your Groups</h2>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={() => setModal("join")}>
@@ -369,7 +373,7 @@ export default function DashboardPage() {
             <Plus size={14} /> Create
           </Button>
         </div>
-      </div>
+      </motion.div>
 
       <AnimatePresence mode="wait">
         {isLoadingGroups ? (
@@ -389,18 +393,18 @@ export default function DashboardPage() {
           <motion.div
             key="groups-empty"
             className="empty-state"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.25 }}
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             <div className="empty-state-icon">
               <span className="text-3xl">👥</span>
             </div>
             <h3 className="text-heading mb-2">No groups yet</h3>
-            <p className="text-body-sm text-[var(--text-secondary)] mb-6 max-w-[240px] mx-auto">
+            <p className="text-body-sm text-[var(--text-secondary)] mb-7 max-w-[260px] mx-auto leading-relaxed">
               Create your first group to start splitting expenses with friends.
             </p>
-            <div className="flex gap-2 justify-center">
+            <div className="flex gap-3 justify-center">
               <Button onClick={() => setModal("create")}>
                 <Plus size={16} /> Create Group
               </Button>
@@ -412,20 +416,13 @@ export default function DashboardPage() {
         ) : (
           <motion.div
             key="groups-list"
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-2.5"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.25 }}
           >
             {groups.map((group, index) => (
-              <motion.div
-                key={group.id}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: Math.min(index * 0.03, 0.12), ease: [0.25, 0.46, 0.45, 0.94] }}
-              >
-                <GroupCard group={group} />
-              </motion.div>
+              <GroupCard key={group.id} group={group} index={index} />
             ))}
           </motion.div>
         )}

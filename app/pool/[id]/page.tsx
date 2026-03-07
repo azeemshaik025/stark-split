@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Plus, TrendingUp, LogOut, ExternalLink, CheckCircle } from "lucide-react";
 import { useStore } from "@/store/useStore";
@@ -229,14 +230,7 @@ export default function PoolPage() {
   if (!user) {
     return (
       <div className="page-content flex flex-col items-center justify-center min-h-[60vh]">
-        <div
-          className="w-full max-w-md rounded-2xl p-8 sm:p-10 text-center relative overflow-hidden"
-          style={{
-            background: "var(--bg-surface)",
-            border: "1px solid var(--border-subtle)",
-            boxShadow: "var(--shadow-card)",
-          }}
-        >
+        <div className="connect-card w-full max-w-md text-center">
           <div
             className="absolute top-0 left-0 right-0 h-1"
             style={{ background: "var(--accent-gradient)" }}
@@ -275,7 +269,7 @@ export default function PoolPage() {
           )}
         </div>
 
-        <div className="flex items-start gap-4">
+        <motion.div className="flex items-start gap-4" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05, ease: [0.25, 0.46, 0.45, 0.94] }}>
           <div
             className="rounded-2xl flex items-center justify-center text-2xl shrink-0"
             style={{
@@ -303,11 +297,14 @@ export default function PoolPage() {
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Total staked summary */}
-        <div
+        <motion.div
           className="mt-6 p-5 rounded-2xl"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
           style={{
             background: "linear-gradient(135deg, rgba(0,210,255,0.08), rgba(108,92,231,0.08))",
             border: "1px solid rgba(0,210,255,0.2)",
@@ -327,12 +324,12 @@ export default function PoolPage() {
             </span>
             <span>Rewards: +{formatAmount(totalRewards, 6)} STRK</span>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Members & their staked amounts */}
-      <h2 className="section-title mb-3">Staking by member</h2>
-      <div className="flex flex-col gap-2 mb-8">
+      <motion.h2 className="section-title mb-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.15 }}>Staking by member</motion.h2>
+      <motion.div className="flex flex-col gap-2 mb-8" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
         {members.map((member) => {
           const pos = positions.find((p) => p.user_id === member.id);
           const isYou = member.id === user.id;
@@ -389,7 +386,7 @@ export default function PoolPage() {
             </div>
           );
         })}
-      </div>
+      </motion.div>
 
       {/* Success: View on explorer */}
       {lastTxHash && (
@@ -424,7 +421,7 @@ export default function PoolPage() {
       )}
 
       {/* Stake / Withdraw */}
-      <div className="card p-5">
+      <motion.div className="card p-5" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.25 }}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-bold text-[var(--text-primary)]">Your position</h3>
           {!myPosition && walletBalances.strk && (
@@ -541,7 +538,7 @@ export default function PoolPage() {
             </Button>
           </div>
         )}
-      </div>
+      </motion.div>
 
       <ToastContainer />
     </div>

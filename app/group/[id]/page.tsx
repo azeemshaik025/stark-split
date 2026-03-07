@@ -203,7 +203,7 @@ export default function GroupPage() {
           )}
         </div>
 
-        <div className="flex items-start gap-4 mb-4">
+        <motion.div className="flex items-start gap-4 mb-4" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05, ease: [0.25, 0.46, 0.45, 0.94] }}>
           <div
             className="w-13 h-13 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
             style={{
@@ -245,7 +245,7 @@ export default function GroupPage() {
               </AnimatePresence>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {user && debts.length > 0 && (
           <motion.div
@@ -376,14 +376,16 @@ export default function GroupPage() {
           >
             <Link
               href={`/group/${groupId}/add-expense`}
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              className="w-13 h-13 rounded-2xl flex items-center justify-center"
               style={{
+                width: 52,
+                height: 52,
                 background: "linear-gradient(135deg, var(--primary), var(--primary-hover))",
-                boxShadow: "var(--shadow-btn)",
+                boxShadow: "var(--shadow-btn), 0 0 32px rgba(99,102,241,0.3)",
               }}
               aria-label="Add expense"
             >
-              <Plus size={22} color="white" strokeWidth={2.5} />
+              <Plus size={24} color="white" strokeWidth={2.5} />
             </Link>
           </motion.div>
         )}

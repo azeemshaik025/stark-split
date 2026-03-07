@@ -157,7 +157,12 @@ function SettlePageContent() {
     <div className="flex justify-center px-5 py-8 pb-16">
       <div className="w-full max-w-md">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
+        <motion.div
+          className="flex items-center gap-3 mb-8"
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
           <button onClick={() => router.back()} className="btn btn-ghost btn-sm p-2 rounded-lg">
             <ArrowLeft size={20} />
           </button>
@@ -177,16 +182,19 @@ function SettlePageContent() {
               </span>
             )}
           </div>
-        </div>
+        </motion.div>
 
         {/* Main card */}
-        <div
+        <motion.div
           className="rounded-2xl mb-6 overflow-hidden"
           style={{
             background: "var(--bg-surface)",
             border: "1px solid var(--border-subtle)",
-            boxShadow: "var(--shadow-md)",
+            boxShadow: "var(--shadow-lg)",
           }}
+          initial={{ opacity: 0, y: 10, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           <AnimatePresence mode="wait">
             {txStatus === "confirmed" ? (
@@ -418,7 +426,7 @@ function SettlePageContent() {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </motion.div>
 
         {/* Actions */}
         <AnimatePresence mode="wait">

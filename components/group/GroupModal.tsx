@@ -90,14 +90,18 @@ export default function GroupModal({ mode, groupType = "split", onClose, onSucce
   return (
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-      style={{ background: "var(--bg-modal)", backdropFilter: "blur(12px)" }}
+      style={{
+        background: "var(--bg-modal)",
+        backdropFilter: "blur(16px) saturate(1.2)",
+        WebkitBackdropFilter: "blur(16px) saturate(1.2)",
+      }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <motion.div
         className="w-full max-w-md rounded-2xl p-6 sm:p-8 relative overflow-hidden"
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
+        initial={{ opacity: 0, scale: 0.93, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.25, ease: [0.34, 1.56, 0.64, 1] }}
         style={{
           background: "var(--bg-elevated)",
           border: "1px solid var(--border-default)",

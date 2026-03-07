@@ -31,8 +31,6 @@ function SidebarNavItem({
 }) {
   const pathname = usePathname();
   const isActive = pathname === href || pathname.startsWith(href + "/");
-
-  // Use cyan accent color for Pools, purple for Splits
   const activeColor = href === "/pools" ? "var(--accent)" : "var(--primary)";
 
   return (
@@ -42,15 +40,15 @@ function SidebarNavItem({
         display: "flex",
         alignItems: "center",
         gap: 10,
-        padding: "9px 12px",
-        borderRadius: 10,
+        padding: "10px 14px",
+        borderRadius: 12,
         color: isActive ? "var(--text-primary)" : "var(--text-secondary)",
         background: isActive ? "var(--bg-interactive)" : "transparent",
         textDecoration: "none",
         fontSize: "0.875rem",
         fontWeight: isActive ? 600 : 500,
         letterSpacing: "-0.01em",
-        transition: "all 0.15s ease",
+        transition: "all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
         position: "relative",
       }}
       onMouseEnter={(e) => {
@@ -77,16 +75,16 @@ function SidebarNavItem({
             style={{
               position: "absolute",
               left: 0,
-              top: "25%",
-              bottom: "25%",
-              width: 2.5,
-              borderRadius: "0 2px 2px 0",
+              top: "22%",
+              bottom: "22%",
+              width: 3,
+              borderRadius: "0 3px 3px 0",
               background: activeColor,
             }}
-            initial={{ opacity: 0, scaleY: 0.5 }}
+            initial={{ opacity: 0, scaleY: 0.4 }}
             animate={{ opacity: 1, scaleY: 1 }}
-            exit={{ opacity: 0, scaleY: 0.5 }}
-            transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+            exit={{ opacity: 0, scaleY: 0.4 }}
+            transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
           />
         )}
       </AnimatePresence>
@@ -100,7 +98,6 @@ function SidebarNavItem({
   );
 }
 
-// ── Desktop sidebar ─────────────────────────────────────
 function Sidebar() {
   return (
     <aside
@@ -112,21 +109,19 @@ function Sidebar() {
         transition: "background-color 0.25s ease, border-color 0.25s ease",
       }}
     >
-      <div className="pb-5 mb-5 px-1" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+      <div className="pb-6 mb-4 px-1" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
         <Logo href="/" size="md" />
       </div>
 
-      {/* Nav */}
-      <nav className="flex flex-col gap-1 flex-1 min-h-0 overflow-y-auto">
+      <nav className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-y-auto">
         {NAV_ITEMS.map((item) => (
           <SidebarNavItem key={item.href} {...item} />
         ))}
       </nav>
 
-      {/* Bottom area: theme toggle + connect */}
-      <div className="pt-4 pb-2 flex flex-col gap-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+      <div className="pt-4 pb-2 flex flex-col gap-3.5" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="flex items-center justify-between gap-2 px-1">
-          <span className="text-[11px] text-[var(--text-tertiary)] font-medium uppercase tracking-wider">Theme</span>
+          <span className="text-[11px] text-[var(--text-tertiary)] font-semibold uppercase tracking-wider">Theme</span>
           <ThemeToggle />
         </div>
         <ConnectButton dropdownUp />
@@ -135,7 +130,6 @@ function Sidebar() {
   );
 }
 
-// ── Mobile top bar ───────────────────────────────────────
 function MobileTopBar() {
   return (
     <div
@@ -144,8 +138,8 @@ function MobileTopBar() {
         top: 0,
         zIndex: 50,
         background: "var(--nav-bg)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
+        backdropFilter: "blur(20px) saturate(1.2)",
+        WebkitBackdropFilter: "blur(20px) saturate(1.2)",
         borderBottom: "1px solid var(--border-subtle)",
         padding: "12px 16px",
         display: "flex",
@@ -162,22 +156,23 @@ function MobileTopBar() {
   );
 }
 
-// ── Mobile bottom nav ────────────────────────────────────
 function MobileBottomNav() {
   const pathname = usePathname();
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-[100] h-16 flex items-center justify-around border-t border-[var(--border-subtle)]"
+      className="fixed bottom-0 left-0 right-0 z-[100] flex items-center justify-around"
       style={{
         background: "var(--nav-bg)",
-        backdropFilter: "blur(20px)",
+        backdropFilter: "blur(24px) saturate(1.3)",
+        WebkitBackdropFilter: "blur(24px) saturate(1.3)",
+        borderTop: "1px solid var(--border-subtle)",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        height: 64,
       }}
     >
       {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
         const isActive = pathname === href || pathname.startsWith(href + "/");
-        // Use cyan for Pools, purple for Splits and Settings
         const activeColor = href === "/pools" ? "var(--accent)" : "var(--primary)";
         return (
           <Link
@@ -187,17 +182,18 @@ function MobileBottomNav() {
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: 2,
-              padding: "8px 14px",
+              gap: 3,
+              padding: "8px 16px",
               color: isActive ? activeColor : "var(--text-tertiary)",
               textDecoration: "none",
-              minWidth: 44,
-              minHeight: 44,
+              minWidth: 48,
+              minHeight: 48,
               justifyContent: "center",
               position: "relative",
+              transition: "color 0.2s ease",
             }}
           >
-            <Icon size={20} strokeWidth={isActive ? 2 : 1.5} />
+            <Icon size={20} strokeWidth={isActive ? 2.2 : 1.5} />
             <span
               style={{
                 fontSize: "0.6rem",
@@ -216,7 +212,7 @@ function MobileBottomNav() {
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
-                  transition={{ type: "spring", stiffness: 380, damping: 22 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 24 }}
                 />
               )}
             </AnimatePresence>
@@ -227,7 +223,6 @@ function MobileBottomNav() {
   );
 }
 
-// ── Main AppShell ────────────────────────────────────────
 interface AppShellProps {
   children: React.ReactNode;
 }
@@ -236,19 +231,15 @@ export default function AppShell({ children }: AppShellProps) {
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-base)" }}>
       <WalletRestorer />
-      {/* Desktop sidebar — hidden on mobile via CSS */}
       <div className="sidebar-wrapper">
         <Sidebar />
       </div>
 
-      {/* Main area */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        {/* Mobile top bar — hidden on desktop via CSS */}
         <div className="mobile-topbar-wrapper">
           <MobileTopBar />
         </div>
 
-        {/* Page content — dashboard-style background (dots + aurora, distinct from homepage grid) */}
         <main
           className="relative"
           style={{ flex: 1, overflowY: "auto" }}
@@ -260,7 +251,6 @@ export default function AppShell({ children }: AppShellProps) {
           {children}
         </main>
 
-        {/* Mobile bottom nav — hidden on desktop */}
         <div className="mobile-bottomnav-wrapper">
           <MobileBottomNav />
         </div>
